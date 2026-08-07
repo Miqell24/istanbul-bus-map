@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Istanbul Public Transport — interactive map</title>
+<link rel="stylesheet" href="vendor/maplibre-gl.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="map"></div>
+<div id="area-box"></div>
+<div id="area-hint">Drag a rectangle to choose the export area &middot; Esc cancels</div>
+<aside id="panel">
+  <h1>Istanbul<br>Public Transport</h1>
+  <details class="city-switch">
+    <summary>Switch city</summary>
+    <nav>
+      <a href="https://miqell24.github.io/krakow-bus-map/">Kraków</a>
+      <a href="https://miqell24.github.io/poznan-bus-map/">Poznań</a>
+      <a href="https://miqell24.github.io/gzm-bus-map/">GZM Metropolis (Katowice)</a>
+      <a href="https://miqell24.github.io/rybnik-bus-map/">Rybnik Region (Żory · Jastrzębie · Wodzisław)</a>
+      <a href="https://miqell24.github.io/trojmiasto-bus-map/">Tricity (Gdańsk–Gdynia–Sopot)</a>
+      <a href="https://miqell24.github.io/vienna-bus-map/">Vienna</a>
+      <a href="https://miqell24.github.io/bucharest-bus-map/">Bucharest &amp; Ilfov</a>
+      <a href="https://miqell24.github.io/sofia-bus-map/">Sofia</a>
+      <span class="current">Istanbul</span>
+      <a href="https://miqell24.github.io/athens-bus-map/">Athens</a>
+      <a href="https://miqell24.github.io/thessaloniki-bus-map/">Thessaloniki</a>
+      <a href="https://miqell24.github.io/cairo-bus-map/">Cairo</a>
+      <a class="all" href="https://miqell24.github.io/transit-maps/">All cities — portal</a>
+    </nav>
+  </details>
+  <ul class="legend">
+    <li><label><input type="checkbox" id="toggle-bus" checked> <span class="sw line"></span> Bus routes</label></li>
+    <li class="sublegend">&#304;ETT &mdash; 796 lines, incl. the Metrob&uuml;s BRT (34&hellip;) and the night network</li>
+    <li><label><input type="checkbox" id="toggle-mline" checked> <span class="sw line mline"></span> Metrob&uuml;s (BRT)</label></li>
+    <li class="sublegend">The 34-family on the segregated busway S&ouml;&#287;&uuml;tl&uuml;&ccedil;e&#351;me&ndash;Beylikd&uuml;z&uuml;</li>
+    <li><label><input type="checkbox" id="toggle-tram" checked> <span class="sw line tram"></span> Tram routes</label></li>
+    <li class="sublegend">T1 Ba&#287;c&#305;lar&ndash;Kabata&#351; &middot; T3 Kad&#305;k&ouml;y&ndash;Moda &middot; T4 Topkap&#305;&ndash;Mescid-i Selam</li>
+    <li><label><input type="checkbox" id="toggle-metro" checked> <span class="sw line metro"></span> Metro &amp; Marmaray</label></li>
+    <li class="sublegend">M1A/M1B <span class="mini m1"></span> M2 <span class="mini m2"></span> M3 <span class="mini m3"></span> M4 <span class="mini m4"></span> M5&ndash;M9 &middot; Marmaray <span class="mini mr"></span> under the Bosphorus</li>
+    <li><span class="sw stop"></span> Stop</li>
+    <li><span class="sw terminus"></span> Terminus</li>
+  </ul>
+  <details class="lines">
+    <summary>All lines <span id="count"></span></summary>
+    <p class="hint">Click a line to show its route and stops. Two &#304;BB feeds share the map: &#304;ETT buses (drawn from their stop sequences &mdash; the feed ships no shapes) and the rail network with its own geometry.</p>
+    <div id="chips" class="chip-cloud"></div>
+  </details>
+  <div class="export">
+    <button id="export-png" title="Renders the visible view as a large print-quality PNG — street and stop names become legible as you zoom into the image">Export PNG — current view</button>
+    <button id="export-area" title="Drag a rectangle on the map; that area is rendered as a large print-quality PNG">Export PNG — select area</button>
+    <button id="export-all" title="Renders the ENTIRE network as one poster-grade PNG, like the printed city transport map (takes a minute or two)">Export PNG — whole map</button>
+  </div>
+  <div id="footer">Data: &#304;BB Open Data (&#304;ETT &middot; Metro &#304;stanbul &middot; TCDD) &middot; <span id="stamp"></span></div>
+  <label class="debug"><input type="checkbox" id="toggle-shape"> show raw GTFS shapes (QA)</label>
+</aside>
+<script src="vendor/maplibre-gl.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "istanbul-bus-map",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "description": "Interactive map of Istanbul public transport (İETT buses, metro, tram, Marmaray) — İBB open data + OSM + HMM map matching",
+  "scripts": {
+    "download": "bash pipeline/download.sh",
+    "normalize": "node pipeline/normalize.mjs",
+    "build": "node --max-old-space-size=12288 pipeline/build.mjs --all --tram all",
+    "report": "node pipeline/report-gaps.mjs",
+    "serve": "node pipeline/serve.mjs 8138"
+  }
+}
