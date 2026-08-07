@@ -687,8 +687,22 @@ async function init() {
   // grid keeps its scale — the KMK look, where the typography dominates the
   // geometry. All em-based offsets (badge grids, radial offsets) follow the
   // font size automatically.
-  const boostStyle = (st, f) => {
+  // bandShift (poster only): Istanbul's whole-network sheet lands at ~z12.5 —
+  // the only city whose bbox is too large to fit 16 384 px at z13 — which is
+  // BELOW the badge bands, so every loop lost its boxes and reserved name rows
+  // (user report: "no loop is described"). Shifting the zoom windows of the
+  // overlay layers (sources stops/badges/labels, never the base style) down by
+  // the deficit renders the sheet with band 0 active: the same look every
+  // smaller city gets at z13+. A shift of 0 leaves the style untouched.
+  const boostStyle = (st, f, bandShift = 0) => {
     st = JSON.parse(JSON.stringify(st));
+    if (bandShift > 0) {
+      for (const l of st.layers) {
+        if (!['stops', 'badges', 'labels'].includes(l.source)) continue;
+        if (l.minzoom != null) l.minzoom = Math.max(0, l.minzoom - bandShift);
+        if (l.maxzoom != null) l.maxzoom = Math.max(0.01, l.maxzoom - bandShift);
+      }
+    }
     for (const l of st.layers) {
       if (l.type === 'symbol') {
         if (l.layout && l.layout['text-size']) l.layout['text-size'] = scaleOut(l.layout['text-size'], f);
@@ -768,7 +782,9 @@ async function init() {
     try {
       m2 = new maplibregl.Map({
         container: div,
-        style: opts && opts.boost ? boostStyle(map.getStyle(), opts.boost) : map.getStyle(),
+        style: opts && opts.boost
+          ? boostStyle(map.getStyle(), opts.boost, Math.max(0, BADGE_BANDS[0][0] - Z + 0.05))
+          : map.getStyle(),
         center: px2ll(tlx + W / 2, tly + H / 2), zoom: Z,
         pixelRatio: RATIO, preserveDrawingBuffer: true, antialias: true,
         attributionControl: false, interactive: false, fadeDuration: 0,
