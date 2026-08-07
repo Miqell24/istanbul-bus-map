@@ -14,6 +14,23 @@ let map;
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+// Scales the outputs of a size value (plain number, interpolate stops, case
+// branches) by f — used by the label-size buttons and by the poster export,
+// which blows up the whole symbology the same way.
+const scaleOut = (v, f) => {
+  if (typeof v === 'number') return v * f;
+  if (Array.isArray(v)) {
+    if (v[0] === 'interpolate') return v.map((x, i) => (i >= 3 && i % 2 === 0 ? scaleOut(x, f) : x));
+    if (v[0] === 'case') return v.map((x, i) => ((i >= 2 && i % 2 === 0) || i === v.length - 1 ? scaleOut(x, f) : x));
+    if (v[0] === '*') {
+      // badge sizes are ['*', const, per-feature sc] — boost the constant
+      const i = v.findIndex((x, j) => j > 0 && typeof x === 'number');
+      return i > 0 ? v.map((x, j) => (j === i ? x * f : x)) : ['*', f, v];
+    }
+  }
+  return v;
+};
+
 async function init() {
   // The OpenFreeMap glyph server only hosts Noto Sans, so the style is fetched
   // and its glyphs endpoint swapped to VersaTiles, which serves BOTH Noto Sans
@@ -64,9 +81,13 @@ async function init() {
     railway_transit_dashline: { 'line-color': '#f4efe2' },
     boundary_3: { 'line-color': '#a89f8e' },
     boundary_2: { 'line-color': '#a89f8e' },
-    'highway-name-minor': { 'text-color': '#3c3a34', 'text-halo-color': '#f4efe2' },
-    'highway-name-major': { 'text-color': '#3c3a34', 'text-halo-color': '#f4efe2' },
-    'highway-name-path': { 'text-color': '#8a8171' },
+    // WIDE WHITE halo, not the paper-cream one: street names cross the transit
+    // strokes and the building fill, and a thin tinted outline let them sink
+    // into both (user report). The same halo is used by our own street-name
+    // layers below, so base and transit names read as one typographic system.
+    'highway-name-minor': { 'text-color': '#33312b', 'text-halo-color': '#ffffff', 'text-halo-width': 2.4, 'text-halo-blur': 0.3 },
+    'highway-name-major': { 'text-color': '#2b2924', 'text-halo-color': '#ffffff', 'text-halo-width': 2.8, 'text-halo-blur': 0.3 },
+    'highway-name-path': { 'text-color': '#8a8171', 'text-halo-color': '#ffffff', 'text-halo-width': 1.8 },
   };
   // Stock positron holds street names back (minor z15+, major z12.2) — far too
   // late for a transit map, where the streets carry the content. Pull them in
@@ -200,7 +221,10 @@ async function init() {
   const numbersLayout = {
     'text-field': numberField,
     'text-font': [NARROW_BOLD],
-    'text-size': ['interpolate', ['linear'], ['zoom'], 11, 9, 14, 11.5, 17, 14.5],
+    // a quarter smaller than the stop names' scale: the rows are the most
+    // repeated element on the map, and at the old size they crowded whole
+    // corridors out of the placement (the Label size buttons scale from here)
+    'text-size': ['interpolate', ['linear'], ['zoom'], 11, 6.8, 14, 8.6, 17, 10.9],
     'text-rotate': ['get', 'angle'],
     'text-rotation-alignment': 'map',
     // 'auto' inherits pitch-alignment 'map', and that path in MapLibre 5.6 kills
@@ -209,11 +233,20 @@ async function init() {
     'text-anchor': 'bottom',
     'text-offset': [0, -0.6],
     // Long rows WRAP into a stacked block (the printed-KMK convention). This
-    // also matters for collisions: MapLibre boxes rotated text as if unrotated,
-    // so a long single-line row beside a N-S street owns a wide horizontal bar
-    // and dies against anything placed earlier — wrapped blocks survive.
-    'text-max-width': 10,
+    // also matters for collisions: a symbol that rotates with the map is
+    // reserved through the AXIS-ALIGNED ENVELOPE of its rotated box, so a wide
+    // flat block set diagonally claims up to twice its own area and dies
+    // against anything placed earlier. The envelope is smallest when the block
+    // is SQUARE, so the wrap width follows the row length: w ≈ 1.45·√chars
+    // (measured in Rybnik centre at z14: 16 → 22 rows placed).
+    'text-max-width': ['max', 4, ['min', 11, ['round', ['*', 1.45, ['sqrt', ['length', ['get', 'lines']]]]]]],
     'text-line-height': 1.15,
+    // 2 px of collision padding around every block is a whole extra row's worth
+    // of margin once the map is packed
+    'text-padding': 1,
+    // when not everything fits, the busiest corridors are the ones worth
+    // keeping: MapLibre places ascending sort keys first
+    'symbol-sort-key': ['-', 0, ['length', ['get', 'lines']]],
   };
   const numbersPaint = { 'text-color': ['coalesce', ['get', 'color'], KMK], 'text-halo-color': '#ffffff', 'text-halo-width': 2 };
   // Every label is collision-managed (allow-overlap turned whole districts into
@@ -238,6 +271,43 @@ async function init() {
     if (d.maxzoom) def.maxzoom = d.maxzoom;
     map.addLayer(def);
   }
+
+  // STREET NAMES OF THE NETWORK, drawn from our own source instead of the base
+  // tiles. The tiles carry minor-road names only from z13, publish them once
+  // every few hundred metres and drop most of them in collisions — so the
+  // streets the lines actually ride on ran nameless (user report: "far too few
+  // street names"). A geojson source has no zoom gate: every roadway with a
+  // name in OSM can print it at any zoom, repeated along its whole course, with
+  // the wide white halo that keeps it readable over the strokes.
+  // The geometry is NOT the stroke layer: that one is cut wherever the line set
+  // changes (median fragment at z12.6: 21 px, shorter than the name itself), so
+  // the pipeline re-joins the runs by name into whole streets. Roundabouts are
+  // left out — text bent around a 20 m circle is unreadable, and the streets
+  // meeting there carry the name anyway.
+  map.addSource('street-names', { type: 'geojson', data: 'data/street-names.geojson' });
+  const streetNamesDef = (id, extra) => ({
+    id, type: 'symbol', source: 'street-names',
+    ...extra,
+    layout: {
+      'text-field': ['get', 'name'],
+      'text-font': [NARROW],
+      'symbol-placement': 'line',
+      // tighter than the base style's 250 px: a long avenue should repeat its
+      // name every couple of blocks, the way printed network maps do
+      'symbol-spacing': ['interpolate', ['linear'], ['zoom'], 11, 190, 14, 260, 17, 380],
+      'text-size': ['interpolate', ['linear'], ['zoom'], 11, 9.5, 14, 11.5, 17, 13.5],
+      // beside the stroke, on the opposite side from the line numbers
+      // (those sit 0.6 em above it), so name and numbers never fight
+      'text-offset': [0, 0.9],
+      'text-max-angle': 32,
+      'text-padding': 2,
+      'text-pitch-alignment': 'viewport',
+    },
+    // the widest halo on the map: these names lie across the transit strokes
+    // themselves, where a thin outline disappeared into the navy
+    paint: { 'text-color': '#2b2924', 'text-halo-color': '#ffffff', 'text-halo-width': 3, 'text-halo-blur': 0.3 },
+  });
+  map.addLayer(streetNamesDef('transit-street-names', { minzoom: 13 }));
 
   // Stops as HALF-DISCS: flat edge lying on the line, bulge pointing to the
   // pole's side of the street (angle from the pipeline). Canvas-drawn icon per
@@ -493,16 +563,19 @@ async function init() {
   //   stop names            — MANDATORY: a stop must never lose its name to a
   //                           line number (numbers repeat along the street and
   //                           reappear a block further; a stop name cannot)
-  //   line numbers          — once-per-street anchors above the repeats
-  //   arterial street names — street names live ON the axis, numbers 0.6 em
-  //                           beside it: with names placed first their dense
-  //                           repeats grazed the number blocks and emptied
-  //                           whole corridors, so names FILL GAPS instead
+  //   line numbers          — the once-per-street anchors
+  //   network street names  — the names of the roadways the lines ride on:
+  //                           worth more than the THIRD copy of the same number
+  //                           row, worth less than its first
+  //   number repeats        — the fallback anchors, filling what is left
+  //   arterial street names — the base tiles' own names
   //   minor street names
   //   stop dots, then the rest of the base style
   if (map.getLayer('highway-name-minor')) map.moveLayer('highway-name-minor');
   if (map.getLayer('highway-name-major')) map.moveLayer('highway-name-major');
-  for (const d of [...NUM_LAYERS].reverse()) map.moveLayer(d.id);
+  map.moveLayer('street-numbers-extra');
+  map.moveLayer('transit-street-names');
+  for (const d of NUM_LAYERS) if (d.id !== 'street-numbers-extra') map.moveLayer(d.id);
   map.moveLayer('stops-names');
   map.moveLayer('stops-terminus-names');
   // Below z13 arterial names need to outrank even the numbers — the
@@ -512,6 +585,9 @@ async function init() {
   // original (below the numbers) takes over.
   const majorDef = style.layers.find((l) => l.id === 'highway-name-major');
   if (majorDef) map.addLayer({ ...majorDef, id: 'highway-name-major-low', minzoom: 11.5, maxzoom: 13 });
+  // …and the network's own street names need the same lift below z13, for the
+  // same reason: down there the numbers cover the whole region wall to wall.
+  map.addLayer(streetNamesDef('transit-street-names-low', { minzoom: 10.5, maxzoom: 13 }));
   map.moveLayer('stops-metro-names');
   map.moveLayer('stops-metro-names-hi');
   // Badges LAST (= top of the ladder): they draw unconditionally either way,
@@ -519,6 +595,58 @@ async function init() {
   // anchors dodge the complexes — Sadat printed straight across the Abdel
   // Moneim Riad grid when the names placed first and could not see it.
   for (const id of [...BADGE_LAYERS, ...BADGE_NAME_LAYERS]) map.moveLayer(id);
+
+  // ---- global label size (the A− / A+ buttons) ----
+  // Every symbol layer's authored text size is captured once, base style
+  // included; the buttons re-apply all of them scaled by ONE factor, so the
+  // whole typographic system grows or shrinks together at ANY zoom instead of
+  // waiting for the next zoom band. Bigger text also means fewer labels survive
+  // the collisions and smaller text means more of them fit — which is exactly
+  // the trade-off the buttons are there to hand to the reader. The PNG export
+  // clones the live style, so a sheet inherits the chosen size.
+  const TEXT_BASE = map.getStyle().layers
+    .filter((l) => l.type === 'symbol')
+    .map((l) => ({
+      id: l.id,
+      // an omitted text-size means MapLibre's default of 16 — scale that too
+      size: (l.layout && l.layout['text-size']) ?? 16,
+      halo: l.paint ? l.paint['text-halo-width'] : undefined,
+    }));
+  // 25 % … 190 %, in roughly even steps and finer around 1. The bottom end is
+  // there for the posters: on a 16 000 px sheet a quarter-size label is still
+  // sharp when you zoom into the file, and at that size the whole network fits
+  // its numbers and names in.
+  const LABEL_SCALES = [0.25, 0.35, 0.45, 0.6, 0.75, 0.85, 1, 1.15, 1.35, 1.6, 1.9];
+  let labelScale = 1;
+  function applyLabelScale() {
+    // Halos shrink proportionally but grow only with the square root: a 1.9×
+    // outline drawn linearly turns dense text into white blobs, while a halo
+    // kept near full width around quarter-size glyphs swallows them.
+    const h = labelScale < 1 ? labelScale : Math.sqrt(labelScale);
+    for (const t of TEXT_BASE) {
+      if (!map.getLayer(t.id)) continue;
+      map.setLayoutProperty(t.id, 'text-size', scaleOut(t.size, labelScale));
+      if (t.halo !== undefined) map.setPaintProperty(t.id, 'text-halo-width', scaleOut(t.halo, h));
+    }
+    const out = document.getElementById('label-size-val');
+    if (out) out.textContent = Math.round(labelScale * 100) + '%';
+    for (const [id, dir] of [['label-smaller', -1], ['label-bigger', 1]]) {
+      const b = document.getElementById(id);
+      const i = LABEL_SCALES.indexOf(labelScale);
+      if (b) b.disabled = (i + dir < 0 || i + dir >= LABEL_SCALES.length);
+    }
+  }
+  const stepLabelScale = (dir) => {
+    const i = LABEL_SCALES.indexOf(labelScale);
+    labelScale = LABEL_SCALES[Math.min(LABEL_SCALES.length - 1, Math.max(0, i + dir))];
+    applyLabelScale();
+  };
+  for (const [id, dir] of [['label-smaller', -1], ['label-bigger', 1]]) {
+    const b = document.getElementById(id);
+    if (b) b.addEventListener('click', () => stepLabelScale(dir));
+  }
+  window.__labelScale = (f) => { labelScale = f; applyLabelScale(); }; // test hook
+  applyLabelScale();
 
   // Mode filters (bus/tram/metro) + line selection: clicking a chip shows only
   // that line's route with all of its stops (properties.arr carry the lists).
@@ -667,21 +795,6 @@ async function init() {
   const btnArea = document.getElementById('export-area');
   const btnAll = document.getElementById('export-all');
   const exportBusy = (on) => [btnView, btnArea, btnAll].forEach((b) => { b.disabled = on; });
-  // Scales the outputs of a size value (plain number, interpolate stops, case
-  // branches) by f — used to blow up the symbology for the area poster.
-  const scaleOut = (v, f) => {
-    if (typeof v === 'number') return v * f;
-    if (Array.isArray(v)) {
-      if (v[0] === 'interpolate') return v.map((x, i) => (i >= 3 && i % 2 === 0 ? scaleOut(x, f) : x));
-      if (v[0] === 'case') return v.map((x, i) => ((i >= 2 && i % 2 === 0) || i === v.length - 1 ? scaleOut(x, f) : x));
-      if (v[0] === '*') {
-        // badge sizes are ['*', const, per-feature sc] — boost the constant
-        const i = v.findIndex((x, j) => j > 0 && typeof x === 'number');
-        return i > 0 ? v.map((x, j) => (j === i ? x * f : x)) : ['*', f, v];
-      }
-    }
-    return v;
-  };
   // Area-poster styling: every label (street/stop names, numbers, badges),
   // the stop discs and the transit strokes grow by f while the base street
   // grid keeps its scale — the KMK look, where the typography dominates the
@@ -714,17 +827,19 @@ async function init() {
       }
     }
     // Poster passes only (boostStyle never runs on the WYSIWYG current-view
-    // export): arterial street names move ABOVE the transit numbers. On the
+    // export): the street names move ABOVE the transit numbers. On the
     // whole-map sheet (~z13.9) the wall-to-wall number labels otherwise win
     // every collision and the poster ships without a single street name
     // (user report). Stop names, terminus names and the badge grids still
-    // outrank them — only the endlessly repeating numbers yield.
-    const mi = st.layers.findIndex((l) => l.id === 'highway-name-major');
-    if (mi >= 0) {
-      const [major] = st.layers.splice(mi, 1);
+    // outrank them — only the numbers yield, and those repeat every couple of
+    // blocks anyway.
+    for (const id of ['highway-name-major', 'transit-street-names']) {
+      const mi = st.layers.findIndex((l) => l.id === id);
+      if (mi < 0) continue;
+      const [lyr] = st.layers.splice(mi, 1);
       let last = -1;
       st.layers.forEach((l, i) => { if (/^street-numbers/.test(l.id)) last = i; });
-      st.layers.splice(last >= 0 ? last + 1 : st.layers.length, 0, major);
+      st.layers.splice(last >= 0 ? last + 1 : st.layers.length, 0, lyr);
     }
     return st;
   };

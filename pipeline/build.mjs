@@ -185,13 +185,21 @@ const railCfg = (label, railKeep, routeTypes, pick, sel) => ({
   if (sel.length) MODES.push(railCfg('funiculars', ['funicular', 'rail'], ['7'], () => true, sel));
 }
 
+// Feed coordinate fixes: poles the GTFS places on the wrong street, keyed by
+// `<feed tag>:<stop_id>` with the coordinates of that stop's node in OSM. A
+// misplaced pole is not only a dot in the wrong place: where a feed ships no
+// shapes, the stop sequence IS the matching observation, so the whole line gets
+// dragged into a detour. Empty until a pole is found to be wrong.
+const STOP_FIX = {};
+
 function mergeRuns(all) {
   const merged = [];
   const byKey = new Map();
   for (const r of all) {
     if (r.roundabout) { merged.push(r); continue; }
-    let arr = byKey.get(r.linesKey);
-    if (!arr) byKey.set(r.linesKey, (arr = []));
+    const k = r.linesKey + '\u0000' + (r.name || '');
+    let arr = byKey.get(k);
+    if (!arr) byKey.set(k, (arr = []));
     arr.push(r);
   }
   const pk = (c) => c[0] + ',' + c[1];
@@ -383,7 +391,12 @@ async function processMode(cfg) {
       // feed names carry double spaces here and there — collapse for clean labels
       let name = (s.stop_name || '').replace(/\s+/g, ' ').trim();
       if (feed.titleCase) name = titleCase(name);
-      stopsById.set(feed.tag + ':' + s.stop_id, { name, lat: Number(s.stop_lat), lon: Number(s.stop_lon) });
+      const fix = STOP_FIX[feed.tag + ':' + s.stop_id];
+      stopsById.set(feed.tag + ':' + s.stop_id, {
+        name,
+        lat: fix ? fix[0] : Number(s.stop_lat),
+        lon: fix ? fix[1] : Number(s.stop_lon),
+      });
     }
 
     if (hasShapes) {
@@ -999,12 +1012,15 @@ const metaLines = results.flatMap((r) => r.metaLines);
     if (nearAny / smp.length >= 0.7) o.f.properties.nolabel = 1;
   });
 
-  // Numbers ONCE per street: one label per (street name × line set) pair —
-  // a set change on the same street or the next street = a new label. A group
-  // (twin carriageways/tracks of the same street) gets one anchor at the midpoint
-  // of its longest run. The point carries the street BEARING: the frontend rotates
-  // the text parallel to the road and offsets it aside, so the number stands
-  // BESIDE the roadway along its course.
+  // Numbers per street: one label per (street name × line set) pair — a set
+  // change on the same street or the next street = a new label. A group holds
+  // every run of that pair; EACH run that is not a twin carriageway of an
+  // already-labeled one gets its own anchor, because a group is not one
+  // continuous street: the same name × set reappears on the far side of the
+  // city, and with a single anchor on the longest run those stretches carried
+  // no numbers at all (user report). The point carries the street BEARING: the
+  // frontend rotates the text parallel to the road and offsets it aside, so the
+  // number stands BESIDE the roadway along its course.
   var labelFeatures = [];
   const groups = new Map(); // (name|set) → all runs of the group + the longest one
   let anonId = 0;
@@ -1020,7 +1036,9 @@ const metaLines = results.flatMap((r) => r.metaLines);
       segLens.push(L);
       total += L;
     }
-    if (total < 60) continue;
+    // 40 m: one-block connectors between two avenues are a real part of the
+    // route and must be able to show their numbers too
+    if (total < 40) continue;
     // no name (links, construction) means no street identity — each run on its own
     const gKey = (p.name || `~${anonId++}`) + '|' + p.lines + '|' + (p.busLines || '');
     const entry = { f, coords, xy, segLens, total };
@@ -1030,13 +1048,23 @@ const metaLines = results.flatMap((r) => r.metaLines);
     if (!g.best || total > g.best.total) g.best = entry;
   }
   const WIN = 30;
-  // One label per group at the midpoint of its longest run (the "once per street"
-  // rule) PLUS extra anchors tagged extra:1 spaced along every run of a few
+  // One label per RUN of the group (twin carriageways excluded, see TWIN below)
+  // PLUS extra anchors tagged extra:1 spaced along every run of a couple of
   // blocks or more. The extras are the numbers' FALLBACK positions: stop names
   // outrank numbers in the frontend ladder, so where a name takes the main
   // anchor's spot the row must be able to reappear further down the street —
   // every anchor is collision-managed, so only the free ones actually render.
-  const LONG_RUN = 500, SPACING = 550, EXCL = 300;
+  // The spacings are deliberately tight (they used to be 500/550/300, i.e. only
+  // avenues got a second chance): in a city centre the runs are 100–250 m
+  // blocks, so most streets had exactly ONE candidate position and showed no
+  // numbers at all whenever a stop name took that spot — measured at z14 in
+  // Rybnik centre, 15 of 112 anchors survived. Now every block-length run
+  // carries fallbacks; the frontend renders only the ones that are free.
+  const LONG_RUN = 120, SPACING = 210, EXCL = 130;
+  // a run whose points mostly lie within TWIN metres of an already-labeled run
+  // of the SAME group is its second carriageway (or a re-traced overlay) —
+  // labeling it again would print the same row twice across one street
+  const TWIN = 35, TWIN_FRAC = 0.6, MAIN_EXCL = 150;
   const tryPlace = (e, d) => {
     const { coords, xy, segLens, total } = e;
     const at = (dd) => {
@@ -1086,10 +1114,35 @@ const metaLines = results.flatMap((r) => r.metaLines);
       labelFeatures.push({ type: 'Feature', geometry: { type: 'Point', coordinates: [round6(placed.c.lon), round6(placed.c.lat)] }, properties: props });
       anchors.push([placed.c.x, placed.c.y]);
     };
-    // anchor at the midpoint; if there is a tight bend there, try a straighter spot nearby
-    for (const frac of [0.5, 0.35, 0.65, 0.2, 0.8]) {
-      const placed = tryPlace(g.best, frac * g.best.total);
-      if (placed) { emit(placed, false); break; }
+    // Main anchors, longest run first: every run of the group gets one at its
+    // midpoint (a tight bend there → a straighter spot nearby), skipping runs
+    // that merely double an already-labeled one.
+    const labeled = []; // xy polylines of the runs that already carry an anchor
+    const overTwin = (xy) => {
+      const smp = samplesOf(xy);
+      if (smp.length < 2) return false;
+      let near = 0;
+      for (const [x, y] of smp) {
+        for (const poly of labeled) {
+          let hit = false;
+          for (let i = 1; i < poly.length && !hit; i++) {
+            if (dSeg(x, y, poly[i - 1][0], poly[i - 1][1], poly[i][0], poly[i][1]) <= TWIN) hit = true;
+          }
+          if (hit) { near++; break; }
+        }
+      }
+      return near / smp.length > TWIN_FRAC;
+    };
+    for (const e of [...g.runs].sort((a, b) => b.total - a.total)) {
+      if (labeled.length && overTwin(e.xy)) continue;
+      for (const frac of [0.5, 0.35, 0.65, 0.2, 0.8]) {
+        const placed = tryPlace(e, frac * e.total);
+        if (!placed) continue;
+        if (anchors.some(([ax, ay]) => Math.hypot(ax - placed.c.x, ay - placed.c.y) < MAIN_EXCL)) continue;
+        emit(placed, false);
+        labeled.push(e.xy);
+        break;
+      }
     }
     for (const e of g.runs) {
       if (e.total < LONG_RUN) continue;
@@ -1309,6 +1362,19 @@ const BADGE_BANDS = [[13, 13.6], [13.6, 14.4], [14.4, 15.5], [15.5, 16.8], [16.8
       `(${mergedTotal} colliding grids fused)`);
 }
 
+// ---------- 12) street-name geometry: the runs re-joined by NAME ----------
+// The stroke layer is cut wherever the LINE SET changes, so one avenue arrives
+// here as a dozen fragments — median 21 px on screen at z12.6, far too short to
+// carry their own name, which is why the map ran nameless at low zoom (user
+// report). Street names therefore get their own geometry: the same runs merged
+// by name only, so a street is one long polyline that MapLibre can label along
+// its whole course, repeatedly, at any zoom.
+const nameFeatures = mergeRuns(streetFeatures
+  .filter((f) => f.properties.name && !f.properties.roundabout && !f.properties.unmapped)
+  .map((f) => ({ coords: f.geometry.coordinates, name: f.properties.name, linesKey: f.properties.name, roundabout: 0 })))
+  .map((r) => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: r.coords }, properties: { name: r.name } }));
+log(`Street names: ${nameFeatures.length} named polylines re-joined from ${streetFeatures.filter((f) => f.properties.name).length} runs`);
+
 let bLonMin = Infinity, bLonMax = -Infinity, bLatMin = Infinity, bLatMax = -Infinity;
 for (const f of routeFeatures) for (const [lon, lat] of f.geometry.coordinates) {
   if (lon < bLonMin) bLonMin = lon; if (lon > bLonMax) bLonMax = lon;
@@ -1321,6 +1387,7 @@ const fc = (features) => JSON.stringify({ type: 'FeatureCollection', features })
 writeFileSync(join(outDir, 'route.geojson'), fc(routeFeatures));
 writeFileSync(join(outDir, 'streets.geojson'), fc(streetFeatures));
 writeFileSync(join(outDir, 'labels.geojson'), fc(labelFeatures));
+writeFileSync(join(outDir, 'street-names.geojson'), fc(nameFeatures));
 writeFileSync(join(outDir, 'stops.geojson'), fc(stopFeatures));
 writeFileSync(join(outDir, 'badges.geojson'), fc(badgeFeatures));
 writeFileSync(join(outDir, 'gtfs-shape.geojson'), fc(shapeFeatures));
@@ -1331,4 +1398,4 @@ writeFileSync(join(outDir, 'meta.json'), JSON.stringify({
   modes: MODES.map((m) => ({ mode: m.mode, label: m.label, color: m.color })),
   lines: metaLines,
 }, null, 2));
-log(`Wrote data/out/{route,streets,labels,stops,badges,gtfs-shape}.geojson + meta.json`);
+log(`Wrote data/out/{route,streets,labels,street-names,stops,badges,gtfs-shape}.geojson + meta.json`);

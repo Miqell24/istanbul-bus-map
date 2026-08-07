@@ -48,6 +48,12 @@
     <p class="hint">Click a line to show its route and stops. Two &#304;BB feeds share the map: &#304;ETT buses (drawn from their stop sequences &mdash; the feed ships no shapes) and the rail network with its own geometry.</p>
     <div id="chips" class="chip-cloud"></div>
   </details>
+  <div class="labelsize" title="Scales every label on the map — line numbers, street and stop names — at any zoom. The PNG exports use the size you pick here.">
+    <span class="lbl">Label size</span>
+    <button id="label-smaller" aria-label="Smaller labels">A&minus;</button>
+    <span id="label-size-val">100%</span>
+    <button id="label-bigger" aria-label="Bigger labels">A+</button>
+  </div>
   <div class="export">
     <button id="export-png" title="Renders the visible view as a large print-quality PNG — street and stop names become legible as you zoom into the image">Export PNG — current view</button>
     <button id="export-area" title="Drag a rectangle on the map; that area is rendered as a large print-quality PNG">Export PNG — select area</button>
