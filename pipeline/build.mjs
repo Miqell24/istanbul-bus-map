@@ -981,27 +981,101 @@ const metaLines = results.flatMap((r) => r.metaLines);
   };
   const busGrid = gridOf(busF), tramGrid = gridOf(tramF);
   const adopted = new Set(); // bus runs whose numbers were taken over by some track
+  // The adopted numbers are POSITIONAL. One union stamped on the whole run
+  // listed every bus that shares any 60 m of a multi-km track somewhere along
+  // it — at Słomiana the Kapelanka track printed 14 bus lines where 3 ride
+  // (user report). So after the run-level qualification (which still filters
+  // out crossing streets) the run is cut into stretches of constant
+  // nearby-line set, and every piece carries only the numbers of the roadway
+  // really beside it. Sub-75 m blips of the set are geometry noise (platform
+  // bulges, stop islands), not a corridor change — absorbed by neighbours.
+  const splitRuns = new Map(); // original tram feature → replacement pieces
   for (const o of tramF) {
     const smp = samplesOf(o.xy);
     if (smp.length < 2) continue;
     const nearLen = new Map();
+    const perSample = [];
     let nearAny = 0;
     for (const [x, y] of smp) {
       const hit = nearAt(busGrid, x, y);
       if (hit.size) nearAny++;
       for (const oi of hit) nearLen.set(oi, (nearLen.get(oi) || 0) + STEP);
+      perSample.push(hit);
     }
     if (nearAny / smp.length < 0.55) continue;
-    const lines = new Set();
+    const qualified = new Set();
     for (const [oi, L] of nearLen) {
       const b = busF[oi];
       // brief brushes (intersections) do not count as a shared corridor
       if (L >= Math.max(60, 0.35 * Math.min(o.len, b.len))) {
-        for (const s of b.f.properties.lines.split(', ')) lines.add(s);
+        qualified.add(oi);
         adopted.add(oi);
       }
     }
-    if (lines.size) o.f.properties.busLines = [...lines].sort(numSort).join(', ');
+    if (!qualified.size) continue;
+    // per-sample set: only the qualified roadways actually within reach HERE
+    const setAt = perSample.map((hit) => {
+      const ls = new Set();
+      for (const oi of hit) if (qualified.has(oi))
+        for (const s of busF[oi].f.properties.lines.split(', ')) ls.add(s);
+      return [...ls].sort(numSort).join(', ');
+    });
+    // maximal blocks of one set, then despeckle the sub-3-sample blips
+    const blocks = [];
+    for (let i = 0; i < setAt.length; i++) {
+      if (blocks.length && blocks[blocks.length - 1].key === setAt[i]) blocks[blocks.length - 1].i1 = i;
+      else blocks.push({ key: setAt[i], i0: i, i1: i });
+    }
+    for (let changed = true; changed && blocks.length > 1;) {
+      changed = false;
+      for (let bi = 0; bi < blocks.length; bi++) {
+        if (blocks[bi].i1 - blocks[bi].i0 + 1 >= 3) continue;
+        const prev = blocks[bi - 1], next = blocks[bi + 1];
+        if (prev && next && prev.key === next.key) { prev.i1 = next.i1; blocks.splice(bi, 2); }
+        else if (!prev && next) { next.i0 = blocks[bi].i0; blocks.splice(bi, 1); }
+        else if (!next && prev) { prev.i1 = blocks[bi].i1; blocks.splice(bi, 1); }
+        else continue;
+        changed = true;
+        break;
+      }
+    }
+    if (blocks.length === 1) {
+      if (blocks[0].key) o.f.properties.busLines = blocks[0].key;
+      continue;
+    }
+    // cut the geometry midway between neighbouring blocks' outermost samples
+    const coords = o.f.geometry.coordinates;
+    const cum = [0];
+    for (let i = 1; i < o.xy.length; i++)
+      cum.push(cum[i - 1] + Math.hypot(o.xy[i][0] - o.xy[i - 1][0], o.xy[i][1] - o.xy[i - 1][1]));
+    const total = cum[cum.length - 1];
+    const pointAt = (d) => {
+      let i = 1;
+      while (i < cum.length - 1 && cum[i] < d) i++;
+      const L = cum[i] - cum[i - 1];
+      const t = L ? Math.min(1, Math.max(0, (d - cum[i - 1]) / L)) : 0;
+      return [round6(coords[i - 1][0] + t * (coords[i][0] - coords[i - 1][0])),
+              round6(coords[i - 1][1] + t * (coords[i][1] - coords[i - 1][1]))];
+    };
+    const pieces = [];
+    for (let bi = 0; bi < blocks.length; bi++) {
+      const d0 = bi === 0 ? 0 : (blocks[bi - 1].i1 + blocks[bi].i0) / 2 * STEP;
+      const d1 = bi === blocks.length - 1 ? total : (blocks[bi].i1 + blocks[bi + 1].i0) / 2 * STEP;
+      if (d1 - d0 < 1) continue;
+      const cs = [pointAt(d0)];
+      for (let i = 0; i < coords.length; i++) if (cum[i] > d0 && cum[i] < d1) cs.push(coords[i]);
+      cs.push(pointAt(d1));
+      const props = { ...o.f.properties };
+      delete props.busLines;
+      if (blocks[bi].key) props.busLines = blocks[bi].key;
+      pieces.push({ type: 'Feature', geometry: { type: 'LineString', coordinates: cs }, properties: props });
+    }
+    if (pieces.length) splitRuns.set(o.f, pieces);
+  }
+  if (splitRuns.size) {
+    const rebuilt = streetFeatures.flatMap((f) => splitRuns.get(f) || [f]);
+    streetFeatures.length = 0;
+    streetFeatures.push(...rebuilt);
   }
   busF.forEach((o, oi) => {
     if (!adopted.has(oi)) return; // numbers not adopted anywhere — the label stays
@@ -1154,7 +1228,7 @@ const metaLines = results.flatMap((r) => r.metaLines);
       }
     }
   }
-  const nShared = tramF.filter((o) => o.f.properties.busLines).length;
+  const nShared = streetFeatures.filter((f) => f.properties.mode === 'tram' && f.properties.busLines).length;
   log(`Labels: ${nShared} shared bus+tram segments, ${busF.filter((o) => o.f.properties.nolabel).length} roadways hand their numbers to tracks, ` +
       `${labelFeatures.length} number labels (${labelFeatures.filter((f) => f.properties.extra).length} zoom-in repeats)`);
 }
