@@ -236,8 +236,10 @@ async function init() {
     // 'auto' inherits pitch-alignment 'map', and that path in MapLibre 5.6 kills
     // rotated point symbols (0 rendered); the map has no pitch anyway
     'text-pitch-alignment': 'viewport',
-    'text-anchor': 'bottom',
-    'text-offset': [0, -0.6],
+    // both sides of the street are candidates: when a stop name (or another
+    // row) holds the preferred side, the row flips instead of dying
+    'text-variable-anchor': ['bottom', 'top'],
+    'text-radial-offset': 0.6,
     // Long rows WRAP into a stacked block (the printed-KMK convention). This
     // also matters for collisions: a symbol that rotates with the map is
     // reserved through the AXIS-ALIGNED ENVELOPE of its rotated box, so a wide
@@ -263,20 +265,40 @@ async function init() {
   // and rank BELOW the once-per-street anchors.
   const NUM_LAYERS = [
     { id: 'street-numbers-low', minzoom: 11, maxzoom: 13, cond: ['!', ['has', 'extra']] },
-    { id: 'street-numbers', minzoom: 13, cond: ['!', ['has', 'extra']] },
+    { id: 'street-numbers', minzoom: 13, cond: ['all', ['!', ['has', 'extra']], ['<=', ['length', ['get', 'lines']], 40]] },
     { id: 'street-numbers-extra', minzoom: 13, cond: ['has', 'extra'] },
   ];
-  for (const d of NUM_LAYERS) {
+  // Each number layer exists twice: the pipeline marks rows whose default
+  // (north-ish) box side lies on a foreign stroke with side:-1, and the -flip
+  // variant tries the opposite side of the street first. The anchor order is
+  // a layout CONSTANT in MapLibre, so a per-feature preference needs the split.
+  const SIDE_VARIANTS = [
+    { suf: '', anchors: ['bottom', 'top'], cond: ['!=', ['get', 'side'], -1] },
+    { suf: '-flip', anchors: ['top', 'bottom'], cond: ['==', ['get', 'side'], -1] },
+  ];
+  for (const d of NUM_LAYERS) for (const v of SIDE_VARIANTS) {
     const def = {
-      id: d.id, type: 'symbol', source: 'labels',
+      id: d.id + v.suf, type: 'symbol', source: 'labels',
       minzoom: d.minzoom,
-      filter: d.cond,
-      layout: { ...numbersLayout },
+      filter: ['all', d.cond, v.cond],
+      layout: { ...numbersLayout, 'text-variable-anchor': v.anchors },
       paint: { ...numbersPaint },
     };
     if (d.maxzoom) def.maxzoom = d.maxzoom;
     map.addLayer(def);
   }
+  // Rows past ~9 numbers are the trunk corridors. Their content outranks the
+  // neighbours (user decision: a trunk with no numbers on the poster is a hole
+  // in the map, slight crowding is fine), so they place BEFORE stop and street
+  // names. The id deliberately does NOT match /^street-numbers/: the poster
+  // boost slots street names above that prefix, and these must stay on top.
+  for (const v of SIDE_VARIANTS) map.addLayer({
+    id: 'big-number-rows' + v.suf, type: 'symbol', source: 'labels',
+    minzoom: 13,
+    filter: ['all', ['!', ['has', 'extra']], ['>', ['length', ['get', 'lines']], 40], v.cond],
+    layout: { ...numbersLayout, 'text-variable-anchor': v.anchors },
+    paint: { ...numbersPaint },
+  });
 
   // STREET NAMES OF THE NETWORK, drawn from our own source instead of the base
   // tiles. The tiles carry minor-road names only from z13, publish them once
@@ -580,10 +602,12 @@ async function init() {
   if (map.getLayer('highway-name-minor')) map.moveLayer('highway-name-minor');
   if (map.getLayer('highway-name-major')) map.moveLayer('highway-name-major');
   map.moveLayer('street-numbers-extra');
+  map.moveLayer('street-numbers-extra-flip');
   map.moveLayer('transit-street-names');
-  for (const d of NUM_LAYERS) if (d.id !== 'street-numbers-extra') map.moveLayer(d.id);
+  for (const d of NUM_LAYERS) if (d.id !== 'street-numbers-extra') for (const v of SIDE_VARIANTS) map.moveLayer(d.id + v.suf);
   map.moveLayer('stops-names');
   map.moveLayer('stops-terminus-names');
+  for (const v of SIDE_VARIANTS) map.moveLayer('big-number-rows' + v.suf); // trunk rows above even the names
   // Below z13 arterial names need to outrank even the numbers — the
   // wall-to-wall low-zoom number labels otherwise leave the city unnamed
   // (measured at z12.5: 36 arterial names in the tiles, 4 rendered). A CLONE
@@ -781,9 +805,17 @@ async function init() {
       : ['coalesce', ['get', 'color'], KMK];
     for (const d of NUM_LAYERS) {
       const thinC = d.id === 'street-numbers-extra' ? densityCond : densityMainCond;
-      map.setFilter(d.id, ['all', d.cond, numC, thinC]);
-      map.setLayoutProperty(d.id, 'text-field', numField);
-      map.setPaintProperty(d.id, 'text-color', numPaint);
+      for (const v of SIDE_VARIANTS) {
+        map.setFilter(d.id + v.suf, ['all', d.cond, v.cond, numC, thinC]);
+        map.setLayoutProperty(d.id + v.suf, 'text-field', numField);
+        map.setPaintProperty(d.id + v.suf, 'text-color', numPaint);
+      }
+    }
+    // trunk rows follow the same mode/selection state as the other number layers
+    for (const v of SIDE_VARIANTS) {
+      map.setFilter('big-number-rows' + v.suf, ['all', ['!', ['has', 'extra']], ['>', ['length', ['get', 'lines']], 40], v.cond, numC, densityMainCond]);
+      map.setLayoutProperty('big-number-rows' + v.suf, 'text-field', numField);
+      map.setPaintProperty('big-number-rows' + v.suf, 'text-color', numPaint);
     }
   }
   document.getElementById('chips').addEventListener('click', (e) => {
@@ -901,6 +933,14 @@ async function init() {
       let last = -1;
       st.layers.forEach((l, i) => { if (/^street-numbers/.test(l.id)) last = i; });
       st.layers.splice(last >= 0 ? last + 1 : st.layers.length, 0, lyr);
+    }
+    // Poster coexistence (user rule: the numbers AND the stop names must BOTH
+    // be on the sheet): trunk rows place first, so the names need room to
+    // dodge the rows' rotated envelopes — same 8 anchors, wider radius — and
+    // the rows themselves float farther off the axis, freeing the poles.
+    for (const l of st.layers) {
+      if (l.id === 'stops-names') l.layout = { ...l.layout, 'text-radial-offset': 2.0 };
+      if (/^big-number-rows/.test(l.id)) l.layout = { ...l.layout, 'text-radial-offset': 1.2 };
     }
     return st;
   };
