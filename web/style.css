@@ -72,7 +72,7 @@ body { font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; }
 }
 .labelsize button:hover { background: var(--kmk-dark); }
 .labelsize button:disabled { opacity: 0.4; cursor: default; }
-#label-size-val { flex: 0 0 40px; text-align: center; font-variant-numeric: tabular-nums; color: #445; }
+#label-size-val, #street-size-val, #density-val { flex: 0 0 40px; text-align: center; font-variant-numeric: tabular-nums; color: #445; }
 .export { display: grid; gap: 6px; margin-top: 10px; }
 .export button {
   display: block;

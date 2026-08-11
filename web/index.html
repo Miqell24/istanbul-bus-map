@@ -49,11 +49,23 @@
     <p class="hint">Click a line to show its route and stops. Two &#304;BB feeds share the map: &#304;ETT buses (drawn from their stop sequences &mdash; the feed ships no shapes) and the rail network with its own geometry.</p>
     <div id="chips" class="chip-cloud"></div>
   </details>
-  <div class="labelsize" title="Scales every label on the map — line numbers, street and stop names — at any zoom. The PNG exports use the size you pick here.">
-    <span class="lbl">Label size</span>
-    <button id="label-smaller" aria-label="Smaller labels">A&minus;</button>
+  <div class="labelsize" title="Scales the transit content — line numbers, stop names and terminus badges — at any zoom. The PNG exports use the sizes you pick here.">
+    <span class="lbl">Lines &amp; stops</span>
+    <button id="label-smaller" aria-label="Smaller transit labels">A&minus;</button>
     <span id="label-size-val">100%</span>
-    <button id="label-bigger" aria-label="Bigger labels">A+</button>
+    <button id="label-bigger" aria-label="Bigger transit labels">A+</button>
+  </div>
+  <div class="labelsize" title="Scales the street names (ours and the base map's) independently of the transit labels.">
+    <span class="lbl">Street names</span>
+    <button id="street-smaller" aria-label="Smaller street names">A&minus;</button>
+    <span id="street-size-val">100%</span>
+    <button id="street-bigger" aria-label="Bigger street names">A+</button>
+  </div>
+  <div class="labelsize" title="How often the line numbers repeat along the streets: low = one row per street, high = repeats appear earlier and also at lower zooms. The PNG exports use this too.">
+    <span class="lbl">Number density</span>
+    <button id="density-smaller" aria-label="Sparser number rows">&minus;</button>
+    <span id="density-val">100%</span>
+    <button id="density-bigger" aria-label="Denser number rows">+</button>
   </div>
   <div class="export">
     <button id="export-png" title="Renders the visible view as a large print-quality PNG — street and stop names become legible as you zoom into the image">Export PNG — current view</button>

@@ -132,6 +132,12 @@ async function init() {
     }),
   ]);
 
+  // The map can be constructed before the stylesheet lays out #map (style
+  // fetched from disk cache beats CSSOM) — the canvas then sticks at the
+  // 400×300 fallback (this maplibre build only watches window.resize).
+  // Re-measure now that layout is settled; the initial jumpTo below sets the view.
+  map.resize();
+
   // Panel (English, minimal): legend + mode toggles + expandable clickable line list.
   const nBus = meta.lines.filter((l) => l.mode === 'bus').length;
   // Marmaray counts with the metro: it is drawn metro-style and sits under the
@@ -596,18 +602,20 @@ async function init() {
   // Moneim Riad grid when the names placed first and could not see it.
   for (const id of [...BADGE_LAYERS, ...BADGE_NAME_LAYERS]) map.moveLayer(id);
 
-  // ---- global label size (the A− / A+ buttons) ----
+  // ---- label size (two independent A− / A+ rows) ----
   // Every symbol layer's authored text size is captured once, base style
-  // included; the buttons re-apply all of them scaled by ONE factor, so the
-  // whole typographic system grows or shrinks together at ANY zoom instead of
-  // waiting for the next zoom band. Bigger text also means fewer labels survive
-  // the collisions and smaller text means more of them fit — which is exactly
-  // the trade-off the buttons are there to hand to the reader. The PNG export
-  // clones the live style, so a sheet inherits the chosen size.
+  // included — but the layers fall into TWO groups scaled by their own factor
+  // (user request): 't' = the transit content (line numbers, stop names,
+  // terminus badges), 's' = the street and place names, ours and the base
+  // map's. Bigger text also means fewer labels survive the collisions and
+  // smaller text means more of them fit — exactly the trade-off the buttons
+  // hand to the reader, now separately for each world. The PNG export clones
+  // the live style, so a sheet inherits both chosen sizes.
   const TEXT_BASE = map.getStyle().layers
     .filter((l) => l.type === 'symbol')
     .map((l) => ({
       id: l.id,
+      grp: /^(street-numbers|big-number-rows|stops-)/.test(l.id) ? 't' : 's',
       // an omitted text-size means MapLibre's default of 16 — scale that too
       size: (l.layout && l.layout['text-size']) ?? 16,
       halo: l.paint ? l.paint['text-halo-width'] : undefined,
@@ -617,35 +625,46 @@ async function init() {
   // sharp when you zoom into the file, and at that size the whole network fits
   // its numbers and names in.
   const LABEL_SCALES = [0.25, 0.35, 0.45, 0.6, 0.75, 0.85, 1, 1.15, 1.35, 1.6, 1.9];
-  let labelScale = 1;
+  const labelScale = { t: 1, s: 1 };
+  const SCALE_UI = {
+    t: { smaller: 'label-smaller', bigger: 'label-bigger', val: 'label-size-val' },
+    s: { smaller: 'street-smaller', bigger: 'street-bigger', val: 'street-size-val' },
+  };
   function applyLabelScale() {
-    // Halos shrink proportionally but grow only with the square root: a 1.9×
-    // outline drawn linearly turns dense text into white blobs, while a halo
-    // kept near full width around quarter-size glyphs swallows them.
-    const h = labelScale < 1 ? labelScale : Math.sqrt(labelScale);
     for (const t of TEXT_BASE) {
       if (!map.getLayer(t.id)) continue;
-      map.setLayoutProperty(t.id, 'text-size', scaleOut(t.size, labelScale));
+      const f = labelScale[t.grp];
+      // Halos shrink proportionally but grow only with the square root: a 1.9×
+      // outline drawn linearly turns dense text into white blobs, while a halo
+      // kept near full width around quarter-size glyphs swallows them.
+      const h = f < 1 ? f : Math.sqrt(f);
+      map.setLayoutProperty(t.id, 'text-size', scaleOut(t.size, f));
       if (t.halo !== undefined) map.setPaintProperty(t.id, 'text-halo-width', scaleOut(t.halo, h));
     }
-    const out = document.getElementById('label-size-val');
-    if (out) out.textContent = Math.round(labelScale * 100) + '%';
-    for (const [id, dir] of [['label-smaller', -1], ['label-bigger', 1]]) {
-      const b = document.getElementById(id);
-      const i = LABEL_SCALES.indexOf(labelScale);
-      if (b) b.disabled = (i + dir < 0 || i + dir >= LABEL_SCALES.length);
+    for (const g of Object.keys(SCALE_UI)) {
+      const ui = SCALE_UI[g];
+      const out = document.getElementById(ui.val);
+      if (out) out.textContent = Math.round(labelScale[g] * 100) + '%';
+      const i = LABEL_SCALES.indexOf(labelScale[g]);
+      for (const [id, dir] of [[ui.smaller, -1], [ui.bigger, 1]]) {
+        const b = document.getElementById(id);
+        if (b) b.disabled = (i + dir < 0 || i + dir >= LABEL_SCALES.length);
+      }
     }
   }
-  const stepLabelScale = (dir) => {
-    const i = LABEL_SCALES.indexOf(labelScale);
-    labelScale = LABEL_SCALES[Math.min(LABEL_SCALES.length - 1, Math.max(0, i + dir))];
+  const stepLabelScale = (g, dir) => {
+    const i = LABEL_SCALES.indexOf(labelScale[g]);
+    labelScale[g] = LABEL_SCALES[Math.min(LABEL_SCALES.length - 1, Math.max(0, i + dir))];
     applyLabelScale();
   };
-  for (const [id, dir] of [['label-smaller', -1], ['label-bigger', 1]]) {
-    const b = document.getElementById(id);
-    if (b) b.addEventListener('click', () => stepLabelScale(dir));
+  for (const g of Object.keys(SCALE_UI)) {
+    for (const [id, dir] of [[SCALE_UI[g].smaller, -1], [SCALE_UI[g].bigger, 1]]) {
+      const b = document.getElementById(id);
+      if (b) b.addEventListener('click', () => stepLabelScale(g, dir));
+    }
   }
-  window.__labelScale = (f) => { labelScale = f; applyLabelScale(); }; // test hook
+  // test hook: one factor sets both groups; pass a second argument for one group
+  window.__labelScale = (f, g) => { if (g) labelScale[g] = f; else { labelScale.t = f; labelScale.s = f; } applyLabelScale(); };
   applyLabelScale();
 
   // Mode filters (bus/tram/metro) + line selection: clicking a chip shows only
@@ -658,6 +677,8 @@ async function init() {
   // bus numbers visible in the trams-only view (numField never switched to
   // tramOnlyNumbers because (B || M) stayed true)
   const state = { bus: true, tram: true, metro: true, mline: !!document.getElementById('toggle-mline'), selected: null };
+  let densityCond = true; // repeat-thinning condition, set by the Number density row below
+  let densityMainCond = true; // sparsest step: one main row per same-content corridor chain
   const busOnlyNumbers = ['case', ['has', 'busLines'],
     ['format', ['get', 'busLines'], { 'text-color': KMK }],
     ['format', ['get', 'lines'], {}]];
@@ -759,7 +780,8 @@ async function init() {
       ? ['case', ['has', 'mLines'], MLINE_YELLOW, ['coalesce', ['get', 'color'], KMK]]
       : ['coalesce', ['get', 'color'], KMK];
     for (const d of NUM_LAYERS) {
-      map.setFilter(d.id, ['all', d.cond, numC]);
+      const thinC = d.id === 'street-numbers-extra' ? densityCond : densityMainCond;
+      map.setFilter(d.id, ['all', d.cond, numC, thinC]);
       map.setLayoutProperty(d.id, 'text-field', numField);
       map.setPaintProperty(d.id, 'text-color', numPaint);
     }
@@ -778,6 +800,45 @@ async function init() {
     if (el) el.addEventListener('change', (e) => { state[key] = e.target.checked; applyFilters(); });
   }
   applyFilters();
+
+  // ---- number density (the − / + row) ----
+  // Every repeat along a street carries an ordinal (ei) from the pipeline, so
+  // density is DETERMINISTIC thinning: 100 % keeps every repeat, the sparse
+  // steps keep every 2nd/3rd/…, the sparsest drops the repeats entirely (the
+  // main row per street always stays), and the dense end lets the repeats in
+  // from z11 instead of z13. No collision-padding tricks: with variable
+  // anchors MapLibre folds the padding into the anchor shift and the rows
+  // drifted off their streets (user report, Praska).
+  const DENSITY_STEPS = [0.25, 0.35, 0.45, 0.6, 0.75, 0.85, 1, 1.35];
+  const DENSITY_MOD = { 0.25: 0, 0.35: 0, 0.45: 6, 0.6: 4, 0.75: 3, 0.85: 2 }; // 1+: all repeats
+  let labelDensity = 1;
+  function applyLabelDensity() {
+    const m = DENSITY_MOD[labelDensity];
+    densityCond = m === 0 ? false : (m ? ['==', ['%', ['coalesce', ['get', 'ei'], 0], m], 0] : true);
+    // 25 %: beyond dropping the repeats, identical rows chained along one
+    // corridor collapse to their single mi-free representative
+    densityMainCond = labelDensity <= 0.25 ? ['!', ['has', 'mi']] : true;
+    for (const id of ['street-numbers-extra', 'street-numbers-extra-flip'])
+      if (map.getLayer(id)) map.setLayerZoomRange(id, labelDensity >= 1.35 ? 11 : 13, 24);
+    applyFilters();
+    const out = document.getElementById('density-val');
+    if (out) out.textContent = Math.round(labelDensity * 100) + '%';
+    for (const [id, dir] of [['density-smaller', -1], ['density-bigger', 1]]) {
+      const b = document.getElementById(id);
+      const i = DENSITY_STEPS.indexOf(labelDensity);
+      if (b) b.disabled = (i + dir < 0 || i + dir >= DENSITY_STEPS.length);
+    }
+  }
+  for (const [id, dir] of [['density-smaller', -1], ['density-bigger', 1]]) {
+    const b = document.getElementById(id);
+    if (b) b.addEventListener('click', () => {
+      const i = DENSITY_STEPS.indexOf(labelDensity);
+      labelDensity = DENSITY_STEPS[Math.min(DENSITY_STEPS.length - 1, Math.max(0, i + dir))];
+      applyLabelDensity();
+    });
+  }
+  window.__labelDensity = (d) => { labelDensity = d; applyLabelDensity(); }; // test hook
+  applyLabelDensity();
 
   // POSTER-mode PNG export (the look of the official printed KMK city map),
   // three entry points sharing one engine: the CURRENT VIEW, a hand-drawn

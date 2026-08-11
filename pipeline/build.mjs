@@ -1182,9 +1182,29 @@ const metaLines = results.flatMap((r) => r.metaLines);
       baseProps.nmLines = capList(arr.filter((l) => !PSET.has(l)).join(', '));
     }
     const anchors = [];
-    const emit = (placed, extra) => {
+    // The collision engine knows nothing about the STROKES, so on a dual
+    // carriageway the row happily settles between the roadways — parked on
+    // the twin's stroke while the outer side is empty (user report, AGH/UR).
+    // The box of a bottom-anchored row extends to (sin θ, cos θ) in map
+    // meters (the ±90° angle normalization makes it the north-ish side);
+    // probe both sides for foreign runs and mark the row side:-1 when the
+    // default side lies on strokes and the other one is cleaner.
+    const sidePref = (placed) => {
+      const th = placed.ang * Math.PI / 180;
+      const ux = Math.sin(th), uy = Math.cos(th);
+      const runsAt = (s) => nearAt(busGrid, placed.c.x + s * ux * 14, placed.c.y + s * uy * 14).size +
+                            nearAt(tramGrid, placed.c.x + s * ux * 14, placed.c.y + s * uy * 14).size;
+      return runsAt(1) > runsAt(-1) ? -1 : 1;
+    };
+    const emit = (placed, extra, ei) => {
       const props = { ...baseProps, angle: Math.round(placed.ang * 10) / 10 };
-      if (extra) props.extra = 1;
+      if (extra) {
+        props.extra = 1;
+        // ordinal along the run — the frontend's density row thins the
+        // repeats deterministically on this index (every 2nd, 3rd, …)
+        if (ei !== undefined) props.ei = ei;
+      }
+      if (sidePref(placed) < 0) props.side = -1;
       labelFeatures.push({ type: 'Feature', geometry: { type: 'Point', coordinates: [round6(placed.c.lon), round6(placed.c.lat)] }, properties: props });
       anchors.push([placed.c.x, placed.c.y]);
     };
@@ -1220,11 +1240,51 @@ const metaLines = results.flatMap((r) => r.metaLines);
     }
     for (const e of g.runs) {
       if (e.total < LONG_RUN) continue;
+      let ei = 0;
       for (let d = SPACING / 2; d < e.total; d += SPACING) {
         const placed = tryPlace(e, d);
         if (!placed) continue;
         if (anchors.some(([ax, ay]) => Math.hypot(ax - placed.c.x, ay - placed.c.y) < EXCL)) continue;
-        emit(placed, true);
+        emit(placed, true, ei++);
+      }
+    }
+  }
+  // Same-content mains: a corridor keeps its line set across street-name
+  // changes, so one physical street prints the IDENTICAL row once per group
+  // (Kawiory→Chopina→Czarnowiejska = three copies a few hundred metres apart,
+  // user report at the sparsest density). Rank the mains of identical text
+  // chained within 1 km: the one nearest the chain's centre stays unmarked,
+  // the rest get mi=1,2,… — the frontend's sparsest density step keeps only
+  // the unmarked representative.
+  {
+    const mains = labelFeatures.filter((f) => !f.properties.extra);
+    const byText = new Map();
+    for (const f of mains) {
+      const key = f.properties.lines + '|' + (f.properties.busLines || '');
+      if (!byText.has(key)) byText.set(key, []);
+      byText.get(key).push(f);
+    }
+    for (const list of byText.values()) {
+      if (list.length < 2) continue;
+      const pts = list.map((f) => P.toXY(f.geometry.coordinates[1], f.geometry.coordinates[0]));
+      const parent = list.map((_, i) => i);
+      const find = (i) => (parent[i] === i ? i : (parent[i] = find(parent[i])));
+      for (let i = 0; i < list.length; i++)
+        for (let j = i + 1; j < list.length; j++)
+          if (Math.hypot(pts[i][0] - pts[j][0], pts[i][1] - pts[j][1]) < 1000) parent[find(i)] = find(j);
+      const clusters = new Map();
+      list.forEach((f, i) => {
+        const r = find(i);
+        if (!clusters.has(r)) clusters.set(r, []);
+        clusters.get(r).push(i);
+      });
+      for (const idxs of clusters.values()) {
+        if (idxs.length < 2) continue;
+        const cx = idxs.reduce((s, i) => s + pts[i][0], 0) / idxs.length;
+        const cy = idxs.reduce((s, i) => s + pts[i][1], 0) / idxs.length;
+        const order = [...idxs].sort((a, b) =>
+          Math.hypot(pts[a][0] - cx, pts[a][1] - cy) - Math.hypot(pts[b][0] - cx, pts[b][1] - cy));
+        order.forEach((i, rank) => { if (rank > 0) list[i].properties.mi = rank; });
       }
     }
   }
