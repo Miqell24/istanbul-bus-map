@@ -116,6 +116,7 @@ async function init() {
   });
   window.__map = map; // debug/test hook (jumpTo, queryRenderedFeatures)
   map.addControl(new maplibregl.NavigationControl({ visualizePitch: false }), 'top-right');
+  map.addControl(new maplibregl.GeolocateControl({ positionOptions: { enableHighAccuracy: true }, trackUserLocation: true, showUserHeading: true, fitBoundsOptions: { maxZoom: 15.5 } }), 'top-right');
   map.addControl(new maplibregl.ScaleControl({ maxWidth: 120 }), 'bottom-left');
   map.addControl(new maplibregl.AttributionControl({ compact: true, customAttribution: 'Timetables: İBB Open Data — İETT, Metro İstanbul, TCDD' }));
 
