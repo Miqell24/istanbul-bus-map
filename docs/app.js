@@ -1188,3 +1188,24 @@ init().catch((err) => {
   console.error(err);
   document.getElementById('footer').textContent = 'Data loading error: ' + err.message;
 });
+
+// Collapsible panel: on phones the panel covers half the map, so it starts
+// collapsed there and folds to a small button; independent of map init.
+{
+  const panelEl = document.getElementById('panel');
+  const panelBtn = document.getElementById('panel-toggle');
+  const syncPanelBtn = () => {
+    const closed = panelEl.classList.contains('collapsed');
+    panelBtn.textContent = closed ? '☰' : '×';
+    const t = closed ? 'Show the panel' : 'Hide the panel';
+    panelBtn.title = t;
+    panelBtn.setAttribute('aria-label', t);
+    panelBtn.setAttribute('aria-expanded', String(!closed));
+  };
+  panelBtn.addEventListener('click', () => {
+    panelEl.classList.toggle('collapsed');
+    syncPanelBtn();
+  });
+  if (window.matchMedia('(max-width: 560px)').matches) panelEl.classList.add('collapsed');
+  syncPanelBtn();
+}

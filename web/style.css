@@ -191,3 +191,39 @@ details.lines summary { cursor: pointer; color: var(--kmk-dark); font-weight: 60
 .city-switch nav a:hover { background: var(--kmk); color: #fff; }
 .city-switch nav .current { background: #dfe8f4; color: var(--kmk-dark); cursor: default; }
 .city-switch nav a.all { margin-top: 3px; padding-top: 6px; border-top: 1px solid #dbe3ef; color: var(--kmk); }
+/* Collapsible panel */
+#panel-toggle {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: block;
+  width: 30px;
+  height: 26px;
+  margin: -4px -6px -22px auto;
+  padding: 0;
+  font: inherit;
+  font-size: 15px;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--kmk-dark);
+  background: #f4f7fb;
+  border: 1px solid #ccd6e4;
+  border-radius: 7px;
+  cursor: pointer;
+}
+#panel-toggle:hover { background: var(--kmk); border-color: var(--kmk); color: #fff; }
+#panel h1 { padding-right: 30px; }
+#panel.collapsed {
+  width: auto;
+  min-width: 0;
+  padding: 8px;
+  overflow: hidden;
+}
+#panel.collapsed > *:not(#panel-toggle) { display: none; }
+#panel.collapsed #panel-toggle {
+  position: static;
+  width: 34px;
+  height: 30px;
+  margin: 0;
+  font-size: 16px;
+}
