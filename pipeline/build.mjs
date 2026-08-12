@@ -1211,14 +1211,7 @@ const metaLines = results.flatMap((r) => r.metaLines);
     if (ang < -90) ang += 180;
     return { c, ang };
   };
-  // Cairo corridors carry up to ~100 paratransit routes; a label listing all of
-  // them is unreadable and kilometers long — display caps at 12 + a "+N" tail.
-  // (`arr` stays complete: the frontend filters and highlights on it.)
   const PSET = MODES[0].mlineSet || new Set();
-  const capList = (s) => {
-    const a = s.split(', ');
-    return a.length > 14 ? a.slice(0, 12).join(', ') + ' +' + (a.length - 12) : s;
-  };
   for (const g of groups.values()) {
     const p = g.best.f.properties;
     const arr = p.busLines ? [...p.lines.split(', '), ...p.busLines.split(', ')] : p.lines.split(', ');
@@ -1227,8 +1220,8 @@ const metaLines = results.flatMap((r) => r.metaLines);
     // mixed paratransit corridors carry both halves so the frontend can show
     // only the relevant one when a single network is toggled on
     if (p.mode === 'bus' && p.mline === 'mix') {
-      baseProps.mLines = capList(arr.filter((l) => PSET.has(l)).join(', '));
-      baseProps.nmLines = capList(arr.filter((l) => !PSET.has(l)).join(', '));
+      baseProps.mLines = arr.filter((l) => PSET.has(l)).join(', ');
+      baseProps.nmLines = arr.filter((l) => !PSET.has(l)).join(', ');
     }
     const anchors = [];
     // The collision engine knows nothing about the STROKES, so on a dual
