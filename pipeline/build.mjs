@@ -13,6 +13,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync } from 'no
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { iterCsv, readCsv } from './lib/csv.mjs';
+import { turkishTitleCase } from './lib/turkish.mjs';
 import { makeProj, resample, nearestOnPolyline, polylineLength } from './lib/geo.mjs';
 import { buildGraph, railKind } from './lib/graph.mjs';
 import { matchShape, extendToStops } from './lib/hmm.mjs';
@@ -139,7 +140,7 @@ const MODES = [{
   feeds: [
     // 9 279 route rows collapse into 796 running lines: İETT files every
     // itinerary variant as its own route, all under the same short name.
-    { tag: 'iett', dir: 'data/gtfs-iett', routeTypes: ['3'], mapKey: (sn) => sn || null },
+    { tag: 'iett', dir: 'data/gtfs-iett', routeTypes: ['3'], mapKey: (sn) => sn || null, turkish: 1 },
   ],
 }];
 // The rail slot splits into FOUR cfgs sharing mode 'tram', because each rides
@@ -152,7 +153,7 @@ const railSel = (pred) => (tramAll ? [] : tramLines.filter(pred));
 const isMetroKey = (l) => /^M[0-9]/.test(l); // selection only: Marmaray has its own cfg
 const isFuniKey = (l) => /^F[0-9]/.test(l);
 const isMarmaray = (l) => /^Marmaray/i.test(l);
-const RAIL = { dir: 'data/gtfs-pt', tag: 'ibb' };
+const RAIL = { dir: 'data/gtfs-pt', tag: 'ibb', turkish: 1 };
 const railCfg = (label, railKeep, routeTypes, pick, sel) => ({
   mode: 'tram', label, osmFile: 'data/osm/istanbul-rail.json',
   graphMode: 'tram', railKeep: new Set(railKeep),
@@ -391,6 +392,8 @@ async function processMode(cfg) {
       // feed names carry double spaces here and there — collapse for clean labels
       let name = (s.stop_name || '').replace(/\s+/g, ' ').trim();
       if (feed.titleCase) name = titleCase(name);
+      // user 13.08.2026: SCREAMING feed names → street-sign case (see lib/turkish.mjs)
+      if (feed.turkish) name = turkishTitleCase(name);
       const fix = STOP_FIX[feed.tag + ':' + s.stop_id];
       stopsById.set(feed.tag + ':' + s.stop_id, {
         name,
