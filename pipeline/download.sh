@@ -16,6 +16,27 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 mkdir -p data/raw data/osm web/vendor
 
+# A downloaded extract is only accepted if it PARSES and carries a plausible
+# number of elements. `grep -q '"elements"'` — the guard this family used
+# everywhere — passes on a truncated response too: Brașov's roads arrived as a
+# 65 kB fragment that still contained the string, was taken for complete, and
+# silently skipped the city (16.08.2026).
+# The minimum differs by extract, so the caller passes its own floor: the road
+# tiles get 1000 rather than the family's usual 2000, because r1c3 is mostly
+# Marmara and holds only ~2400 ways to begin with.
+# A rejected file is deleted rather than left behind — the gates below only ask
+# whether the file exists, so a fragment on disk would be taken for a finished
+# download on the next run.
+ok_json () { # $1=file  $2=minimum element count
+  python3 - "$1" "$2" <<'PYEOF' 2>/dev/null
+import json, sys
+try:
+    sys.exit(0 if len(json.load(open(sys.argv[1])).get("elements", [])) >= int(sys.argv[2]) else 1)
+except Exception:
+    sys.exit(1)
+PYEOF
+}
+
 IETT=https://data.ibb.gov.tr/dataset/8540e256-6df5-4719-85bc-e64e91508ede/resource
 PT=https://data.ibb.gov.tr/dataset/121a9892-7945-419a-9b89-49f6083926df/resource
 
@@ -68,7 +89,7 @@ HW='^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_
 for r in 0 1; do
   for c in 0 1 2 3; do
     f="data/osm/istanbul-r${r}c${c}.json"
-    [ -s "$f" ] && continue
+    ok_json "$f" 1000 && continue
     S=${LATS[$r]}; N=${LATS[$((r+1))]}; W=${LONS[$c]}; E=${LONS[$((c+1))]}
     echo "== Overpass (roads) tile r${r}c${c}: $S,$W,$N,$E =="
     Q="[out:json][timeout:900];way($S,$W,$N,$E)[\"highway\"~\"$HW\"];out geom;"
@@ -78,7 +99,7 @@ for r in 0 1; do
               "https://overpass.kumi.systems/api/interpreter"; do
       echo "-- $EP"
       if curl -fsS --max-time 1800 -o "$f" --data-urlencode "data=$Q" "$EP" \
-         && grep -q '"elements"' "$f"; then
+         && ok_json "$f" 1000; then
         ok=1; break
       fi
     done
@@ -98,11 +119,11 @@ if [ ! -f data/osm/istanbul-rail.json ]; then
             "https://overpass.kumi.systems/api/interpreter"; do
     echo "-- $EP"
     if curl -fsS --max-time 900 -o data/osm/istanbul-rail.json --data-urlencode "data=$QT" "$EP" \
-       && grep -q '"elements"' data/osm/istanbul-rail.json; then
+       && ok_json "data/osm/istanbul-rail.json" 40; then
       ok=1; break
     fi
   done
-  [ "$ok" = 1 ] || { echo "Overpass (rails): all mirrors failed" >&2; exit 1; }
+  [ "$ok" = 1 ] || { rm -f data/osm/istanbul-rail.json; echo "Overpass (rails): all mirrors failed" >&2; exit 1; }
 fi
 
 # 4) MapLibre GL (vendored, no CDN at runtime)
