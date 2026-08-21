@@ -89,6 +89,57 @@ async function init() {
     'highway-name-major': { 'text-color': '#2b2924', 'text-halo-color': '#ffffff', 'text-halo-width': 2.8, 'text-halo-blur': 0.3 },
     'highway-name-path': { 'text-color': '#8a8171', 'text-halo-color': '#ffffff', 'text-halo-width': 1.8 },
   };
+
+  // THE SECOND BASE (ported from the Tricity map, 21.08.2026). Every colour
+  // positron declares is flattened to its own luminance and faded toward
+  // white — layers nobody thought about still come out grey. The few that
+  // carry meaning (water, parks, the built-up ground) are named by hand.
+  const gctx = document.createElement('canvas').getContext('2d');
+  const greyOf = (col, keepInk) => {
+    gctx.fillStyle = '#000000';
+    gctx.fillStyle = col;
+    const t = gctx.fillStyle;
+    let r, g, b, al = 1;
+    if (t[0] === '#') { r = parseInt(t.slice(1, 3), 16); g = parseInt(t.slice(3, 5), 16); b = parseInt(t.slice(5, 7), 16); }
+    else { const mm = (t.match(/[\d.]+/g) || ['0', '0', '0']).map(Number); [r, g, b] = mm; if (mm[3] !== undefined) al = mm[3]; }
+    const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    // text keeps its full darkness; fills and strokes are pulled 28 % toward
+    // white, which is the headroom the coloured strokes need to read as ink
+    const v = Math.round(Math.max(0, Math.min(255, keepInk ? lum : 255 - (255 - lum) * 0.72)));
+    return al < 1 ? `rgba(${v},${v},${v},${al})` : '#' + [v, v, v].map((x) => x.toString(16).padStart(2, '0')).join('');
+  };
+  const COLOR_PROPS = ['background-color', 'fill-color', 'fill-outline-color', 'line-color',
+    'text-color', 'text-halo-color', 'icon-color', 'icon-halo-color', 'circle-color', 'fill-extrusion-color'];
+  const greyDeep = (v, keepInk) => {
+    if (typeof v === 'string') return greyOf(v, keepInk);
+    if (Array.isArray(v)) return v.map((x, i) => (i === 0 ? x : greyDeep(x, keepInk)));
+    return v;
+  };
+  // Roads stay WHITE and the ground goes a step darker: positron paints
+  // service roads and ramps as a hairline, and on a pale grey ground they
+  // disappeared — a stroke riding one then looks like it left the street.
+  const GREY_RECOLOR = {
+    background: { 'background-color': '#e9e9e9' },
+    landuse_residential: { 'fill-color': '#e4e4e4' },
+    park: { 'fill-color': '#dfdfdf' },
+    landcover_wood: { 'fill-color': '#d9d9d9' },
+    water: { 'fill-color': '#cfcfcf' },
+    waterway: { 'line-color': '#cfcfcf' },
+    building: { 'fill-color': '#e0e0e0', 'fill-outline-color': '#d4d4d4' },
+    highway_minor: { 'line-color': '#ffffff' },
+    highway_major_casing: { 'line-color': '#cfcfcf' },
+    highway_major_inner: { 'line-color': '#ffffff' },
+    highway_motorway_casing: { 'line-color': '#c2c2c2' },
+    highway_motorway_inner: { 'line-color': '#f4f4f4' },
+    railway: { 'line-color': '#c4c4c4' },
+    railway_transit: { 'line-color': '#c4c4c4' },
+    'highway-name-minor': { 'text-color': '#4f4f4f', 'text-halo-color': '#ffffff', 'text-halo-width': 2.4, 'text-halo-blur': 0.3 },
+    'highway-name-major': { 'text-color': '#3c3c3c', 'text-halo-color': '#ffffff', 'text-halo-width': 2.8, 'text-halo-blur': 0.3 },
+    'highway-name-path': { 'text-color': '#8c8c8c', 'text-halo-color': '#ffffff', 'text-halo-width': 1.8 },
+  };
+  // both palettes, per layer and per property, captured while the style is
+  // still a plain object — switching is then a loop of setPaintProperty
+  const BASE_PAINT = [];
   // Stock positron holds street names back (minor z15+, major z12.2) — far too
   // late for a transit map, where the streets carry the content. Pull them in
   // earlier (minor stays at 13: the tiles only carry minor names from there)
@@ -100,8 +151,18 @@ async function init() {
   for (const l of style.layers) {
     const tf = l.layout && l.layout['text-font'];
     if (Array.isArray(tf)) l.layout['text-font'] = tf.map((f) => FONT_MAP[f] || f);
-    const o = BASE_RECOLOR[l.id];
+    const o = BASE_RECOLOR[l.id], gr = GREY_RECOLOR[l.id];
     if (o) l.paint = { ...l.paint, ...o };
+    if (l.paint) for (const k of COLOR_PROPS) {
+      if (l.paint[k] === undefined) continue;
+      BASE_PAINT.push({ id: l.id, prop: k, paper: l.paint[k],
+        grey: (gr && gr[k] !== undefined) ? gr[k] : greyDeep(l.paint[k], k === 'text-color' || k === 'icon-color') });
+    }
+    // halo widths differ too, and they are not colours
+    if (gr) for (const k of ['text-halo-width', 'text-halo-blur']) {
+      if (gr[k] === undefined) continue;
+      BASE_PAINT.push({ id: l.id, prop: k, paper: (l.paint && l.paint[k]) ?? (k === 'text-halo-width' ? 1 : 0), grey: gr[k] });
+    }
     if (BASE_MINZOOM[l.id]) l.minzoom = BASE_MINZOOM[l.id];
     if (BASE_SPACING[l.id]) l.layout = { ...l.layout, 'symbol-spacing': BASE_SPACING[l.id] };
     // road-number shields (433, S11…) read as line badges on a transit map
@@ -691,6 +752,63 @@ async function init() {
   // test hook: one factor sets both groups; pass a second argument for one group
   window.__labelScale = (f, g) => { if (g) labelScale[g] = f; else { labelScale.t = f; labelScale.s = f; } applyLabelScale(); };
   applyLabelScale();
+
+  // ---- base colours: the Paper / Grey switch (user request 21.08.2026) ----
+  // The paper palette is the map's face; the grey one flattens the base to
+  // newsprint so the network reads as pure ink. Both palettes live in
+  // BASE_PAINT — switching is a loop of setPaintProperty, and the PNG
+  // exports clone whichever base is on.
+  let greyBase = false;
+  function applyBase() {
+    for (const b of BASE_PAINT) if (map.getLayer(b.id)) map.setPaintProperty(b.id, b.prop, greyBase ? b.grey : b.paper);
+    for (const id of ['transit-street-names', 'transit-street-names-low'])
+      if (map.getLayer(id)) map.setPaintProperty(id, 'text-color', greyBase ? '#3c3c3c' : '#2b2924');
+    for (const btn of document.querySelectorAll('#base-switch button'))
+      btn.classList.toggle('on', (btn.dataset.bg === 'grey') === greyBase);
+  }
+  const bsw = document.getElementById('base-switch');
+  if (bsw) bsw.addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    const g = b.dataset.bg === 'grey';
+    if (g === greyBase) return;
+    greyBase = g;
+    applyBase();
+  });
+  applyBase();
+
+  // ---- route stroke width (the − / + row; user request 21.08.2026) ----
+  // Captured generically: every line layer drawn from OUR geojson sources
+  // that exists at this point — routes, casings, dashes, ribbons, ferry
+  // diagrams — but not the journey overlay (added later) and not the base
+  // map's vector roads. The PNG exports clone the live widths.
+  const WIDTH_BASE = map.getStyle().layers
+    .filter((l) => l.type === 'line' && l.source && !/^journey/.test(l.id)
+      && map.getSource(l.source) && map.getSource(l.source).type === 'geojson')
+    .map((l) => ({ id: l.id, w: map.getPaintProperty(l.id, 'line-width') }));
+  const WIDTH_SCALES = [0.6, 0.8, 1, 1.25, 1.6, 2];
+  let lineScale = 1;
+  function applyLineWidth() {
+    for (const b of WIDTH_BASE) if (map.getLayer(b.id)) map.setPaintProperty(b.id, 'line-width', scaleOut(b.w, lineScale));
+    const out = document.getElementById('width-val');
+    if (out) out.textContent = Math.round(lineScale * 100) + '%';
+    const i = WIDTH_SCALES.indexOf(lineScale);
+    for (const [id, dir] of [['width-smaller', -1], ['width-bigger', 1]]) {
+      const b = document.getElementById(id);
+      if (b) b.disabled = (i + dir < 0 || i + dir >= WIDTH_SCALES.length);
+    }
+  }
+  for (const [id, dir] of [['width-smaller', -1], ['width-bigger', 1]]) {
+    const b = document.getElementById(id);
+    if (b) b.addEventListener('click', () => {
+      const i = WIDTH_SCALES.indexOf(lineScale);
+      lineScale = WIDTH_SCALES[Math.min(WIDTH_SCALES.length - 1, Math.max(0, i + dir))];
+      applyLineWidth();
+    });
+  }
+  // test hook
+  window.__lineScale = (f) => { lineScale = f; applyLineWidth(); };
+  applyLineWidth();
 
   // Mode filters (bus/tram/metro) + line selection: clicking a chip shows only
   // that line's route with all of its stops (properties.arr carry the lists).

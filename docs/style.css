@@ -364,3 +364,9 @@ details.journey .beta {
   margin: 0;
   font-size: 16px;
 }
+
+#base-switch { display: flex; margin: 0 0 8px; border: 1px solid #9aa4b1; border-radius: 7px; overflow: hidden; }
+#base-switch button { flex: 1 1 0; padding: 5px 0; font: inherit; font-size: 12.5px; font-weight: 600; color: #4a5158; background: #fff; border: 0; cursor: pointer; }
+#base-switch button + button { border-left: 1px solid #9aa4b1; }
+#base-switch button:hover { background: #f0f1f3; }
+#base-switch button.on { background: #6f757e; color: #fff; }
