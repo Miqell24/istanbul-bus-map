@@ -370,3 +370,19 @@ details.journey .beta {
 #base-switch button + button { border-left: 1px solid #9aa4b1; }
 #base-switch button:hover { background: #f0f1f3; }
 #base-switch button.on { background: #6f757e; color: #fff; }
+
+/* City-switch filter — type a city instead of scrolling the list */
+.city-switch nav .city-filter {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  padding: 4px 8px;
+  margin-bottom: 3px;
+  border: 1px solid #ccd6e4;
+  border-radius: 6px;
+  background: #fff;
+  color: #223;
+}
+.city-switch nav .city-filter:focus { outline: none; border-color: var(--kmk); box-shadow: 0 0 0 2px rgba(0, 89, 169, 0.2); }
+@media (pointer: coarse) { .city-switch nav .city-filter { font-size: 16px; } }
