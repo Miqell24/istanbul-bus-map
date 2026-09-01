@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-13T09:41:42.495Z",
+  "generatedAt": "2026-09-01T15:56:22.822Z",
   "bbox": [
     27.99831,
     40.784242,
@@ -36825,7 +36825,7 @@
     {
       "line": "T1",
       "mode": "tram",
-      "color": "#005EB8",
+      "color": "#d6212b",
       "dirs": [
         {
           "dir": "0",
@@ -36874,7 +36874,7 @@
     {
       "line": "T3",
       "mode": "tram",
-      "color": "#8C5A2B",
+      "color": "#d6212b",
       "dirs": [
         {
           "dir": "0",
@@ -36902,7 +36902,7 @@
     {
       "line": "T4",
       "mode": "tram",
-      "color": "#E87400",
+      "color": "#d6212b",
       "dirs": [
         {
           "dir": "0",
