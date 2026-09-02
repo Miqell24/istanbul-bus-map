@@ -113,8 +113,6 @@
     <li class="sublegend">T1 Ba&#287;c&#305;lar&ndash;Kabata&#351; &middot; T3 Kad&#305;k&ouml;y&ndash;Moda &middot; T4 Topkap&#305;&ndash;Mescid-i Selam</li>
     <li><label><input type="checkbox" id="toggle-metro" checked> <span class="sw line metro"></span> Metro &amp; Marmaray</label></li>
     <li class="sublegend">M1A/M1B <span class="mini m1"></span> M2 <span class="mini m2"></span> M3 <span class="mini m3"></span> M4 <span class="mini m4"></span> M5&ndash;M9 &middot; Marmaray <span class="mini mr"></span> under the Bosphorus</li>
-    <li><label><input type="checkbox" id="toggle-ferry" checked> <span class="sw line ferry"></span> Ferries</label></li>
-    <li class="sublegend">&#350;ehir Hatlar&#305; &middot; Turyol &middot; Dentur Avrasya &middot; &#304;DO &mdash; the lines run side by side in shared corridors</li>
     <li><span class="sw stop"></span> Stop</li>
     <li><span class="sw terminus"></span> Terminus</li>
   </ul>
@@ -152,11 +150,11 @@
     <button id="export-area" title="Drag a rectangle on the map; that area is rendered as a large print-quality PNG">Export PNG — select area</button>
     <button id="export-atlas" title="The ENTIRE network as one poster-grade PNG at ~65 000 px on the long edge, streamed together in the browser (takes several minutes, keep the tab open)">Export PNG — whole map</button>
   </div>
-  <div id="footer">Data: &#304;BB Open Data (&#304;ETT &middot; Metro &#304;stanbul &middot; TCDD &middot; &#350;ehir Hatlar&#305;) &middot; <span id="stamp"></span></div>
+  <div id="footer">Data: &#304;BB Open Data (&#304;ETT &middot; Metro &#304;stanbul &middot; TCDD) &middot; <span id="stamp"></span></div>
   <label class="debug"><input type="checkbox" id="toggle-shape"> show raw GTFS shapes (QA)</label>
 </aside>
 <script src="vendor/maplibre-gl.js"></script>
-<script src="app.js?v=20260812k"></script>
+<script src="app.js?v=20260822a"></script>
 <script>
 (() => {
   // City-switch filter: type instead of scrolling. Matches the English name,
