@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Istanbul Public Transport — interactive map</title>
 <link rel="stylesheet" href="vendor/maplibre-gl.css">
-<link rel="stylesheet" href="style.css?v=20260812k">
+<link rel="stylesheet" href="style.css?v=20260826c">
 </head>
 <body>
 <div id="map"></div>
@@ -42,13 +42,27 @@
   <details class="city-switch">
     <summary>Switch city</summary>
     <nav>
+      <input class="city-filter" type="search" placeholder="Type a city&hellip;" autocomplete="off" spellcheck="false" aria-label="Filter the city list">
       <a href="https://miqell24.github.io/krakow-bus-map/">Kraków</a>
+      <a href="https://miqell24.github.io/krakow-mld-bus-map/">Kraków + MLD (Małopolska feeder lines)</a>
       <a href="https://miqell24.github.io/poznan-bus-map/">Poznań</a>
       <a href="https://miqell24.github.io/gzm-bus-map/">GZM Metropolis (Katowice)</a>
       <a href="https://miqell24.github.io/rybnik-bus-map/">Rybnik Region (Żory · Jastrzębie · Wodzisław)</a>
       <a href="https://miqell24.github.io/trojmiasto-bus-map/">Tricity (Gdańsk–Gdynia–Sopot)</a>
       <a href="https://miqell24.github.io/grodzisk-bus-map/">Grodzisk Mazowiecki Region</a>
+      <a href="https://miqell24.github.io/warsaw-bus-map/">Warsaw Region (Warsaw · Grodzisk Maz. · communes)</a>
+      <a href="https://miqell24.github.io/lodz-bus-map/">Łódź</a>
+      <a href="https://miqell24.github.io/olsztyn-bus-map/">Olsztyn</a>
+      <a href="https://miqell24.github.io/berlin-bus-map/">Berlin (with Potsdam &amp; the Brandenburg ring)</a>
       <a href="https://miqell24.github.io/vienna-bus-map/">Vienna</a>
+      <a href="https://miqell24.github.io/budapest-bus-map/">Budapest</a>
+      <a href="https://miqell24.github.io/paris-bus-map/">Paris</a>
+      <a href="https://miqell24.github.io/randstad-bus-map/">Randstad (Amsterdam &middot; Haarlem &middot; Leiden &middot; Den Haag &middot; Rotterdam)</a>
+      <a href="https://miqell24.github.io/copenhagen-bus-map/">Copenhagen</a>
+      <a href="https://miqell24.github.io/aarhus-bus-map/">Aarhus</a>
+      <a href="https://miqell24.github.io/stockholm-bus-map/">Stockholm</a>
+      <a href="https://miqell24.github.io/goteborg-bus-map/">Göteborg</a>
+      <a href="https://miqell24.github.io/london-bus-map/">London</a>
       <a href="https://miqell24.github.io/bucharest-bus-map/">Bucharest &amp; Ilfov</a>
       <a href="https://miqell24.github.io/cluj-bus-map/">Cluj-Napoca</a>
       <a href="https://miqell24.github.io/timisoara-bus-map/">Timișoara</a>
@@ -56,13 +70,28 @@
       <a href="https://miqell24.github.io/brasov-bus-map/">Brașov</a>
       <a href="https://miqell24.github.io/iasi-bus-map/">Iași</a>
       <a href="https://miqell24.github.io/constanta-bus-map/">Constanța</a>
+      <a href="https://miqell24.github.io/kyiv-bus-map/">Kyiv</a>
+      <a href="https://miqell24.github.io/lviv-bus-map/">Lviv</a>
       <a href="https://miqell24.github.io/belgrade-bus-map/">Belgrade</a>
+      <a href="https://miqell24.github.io/novi-sad-bus-map/">Novi Sad</a>
+      <a href="https://miqell24.github.io/nis-bus-map/">Niš</a>
+      <a href="https://miqell24.github.io/tirana-bus-map/">Tirana</a>
       <a href="https://miqell24.github.io/sofia-bus-map/">Sofia</a>
+      <a href="https://miqell24.github.io/plovdiv-bus-map/">Plovdiv</a>
+      <a href="https://miqell24.github.io/varna-bus-map/">Varna</a>
+      <a href="https://miqell24.github.io/burgas-bus-map/">Burgas</a>
+      <a href="https://miqell24.github.io/ruse-bus-map/">Ruse</a>
       <span class="current">Istanbul</span>
       <a href="https://miqell24.github.io/athens-bus-map/">Athens</a>
       <a href="https://miqell24.github.io/thessaloniki-bus-map/">Thessaloniki</a>
+      <a href="https://miqell24.github.io/volos-bus-map/">Volos</a>
+      <a href="https://miqell24.github.io/larisa-bus-map/">Larisa</a>
+      <a href="https://miqell24.github.io/rome-bus-map/">Rome</a>
       <a href="https://miqell24.github.io/naples-bus-map/">Naples</a>
       <a href="https://miqell24.github.io/cairo-bus-map/">Cairo</a>
+      <a href="https://miqell24.github.io/addis-bus-map/">Addis Ababa</a>
+      <a href="https://miqell24.github.io/mexico-city-bus-map/">Mexico City</a>
+      <a href="https://miqell24.github.io/sao-paulo-bus-map/">São Paulo</a>
       <a href="https://miqell24.github.io/rio-bus-map/">Rio de Janeiro</a>
       <a href="https://miqell24.github.io/ba-bus-map/">Buenos Aires</a>
       <a class="all" href="https://miqell24.github.io/transit-maps/">All cities — portal</a>
@@ -70,6 +99,11 @@
 
     </nav>
   </details>
+  <div id="base-switch" role="group" aria-label="Base map colours"
+       title="The base map underneath the network: the paper look or flat grey newsprint.">
+    <button type="button" data-bg="paper" class="on">Paper base</button>
+    <button type="button" data-bg="grey">Grey base</button>
+  </div>
   <ul class="legend">
     <li><label><input type="checkbox" id="toggle-bus" checked> <span class="sw line"></span> Bus routes</label></li>
     <li class="sublegend">&#304;ETT &mdash; 796 lines, incl. the Metrob&uuml;s BRT (34&hellip;) and the night network</li>
@@ -79,6 +113,8 @@
     <li class="sublegend">T1 Ba&#287;c&#305;lar&ndash;Kabata&#351; &middot; T3 Kad&#305;k&ouml;y&ndash;Moda &middot; T4 Topkap&#305;&ndash;Mescid-i Selam</li>
     <li><label><input type="checkbox" id="toggle-metro" checked> <span class="sw line metro"></span> Metro &amp; Marmaray</label></li>
     <li class="sublegend">M1A/M1B <span class="mini m1"></span> M2 <span class="mini m2"></span> M3 <span class="mini m3"></span> M4 <span class="mini m4"></span> M5&ndash;M9 &middot; Marmaray <span class="mini mr"></span> under the Bosphorus</li>
+    <li><label><input type="checkbox" id="toggle-ferry" checked> <span class="sw line ferry"></span> Ferries</label></li>
+    <li class="sublegend">&#350;ehir Hatlar&#305; &middot; Turyol &middot; Dentur Avrasya &middot; &#304;DO &mdash; the lines run side by side in shared corridors</li>
     <li><span class="sw stop"></span> Stop</li>
     <li><span class="sw terminus"></span> Terminus</li>
   </ul>
@@ -105,15 +141,51 @@
     <span id="density-val">100%</span>
     <button id="density-bigger" aria-label="Denser number rows">+</button>
   </div>
+  <div class="labelsize" title="Scales the drawn route strokes — lines, casings, dashes and ribbons. The PNG exports use this too.">
+    <span class="lbl">Line width</span>
+    <button id="width-smaller" aria-label="Thinner route lines">&minus;</button>
+    <span id="width-val">100%</span>
+    <button id="width-bigger" aria-label="Thicker route lines">+</button>
+  </div>
   <div class="export">
     <button id="export-png" title="Renders the visible view as a large print-quality PNG — street and stop names become legible as you zoom into the image">Export PNG — current view</button>
     <button id="export-area" title="Drag a rectangle on the map; that area is rendered as a large print-quality PNG">Export PNG — select area</button>
     <button id="export-atlas" title="The ENTIRE network as one poster-grade PNG at ~65 000 px on the long edge, streamed together in the browser (takes several minutes, keep the tab open)">Export PNG — whole map</button>
   </div>
-  <div id="footer">Data: &#304;BB Open Data (&#304;ETT &middot; Metro &#304;stanbul &middot; TCDD) &middot; <span id="stamp"></span></div>
+  <div id="footer">Data: &#304;BB Open Data (&#304;ETT &middot; Metro &#304;stanbul &middot; TCDD &middot; &#350;ehir Hatlar&#305;) &middot; <span id="stamp"></span></div>
   <label class="debug"><input type="checkbox" id="toggle-shape"> show raw GTFS shapes (QA)</label>
 </aside>
 <script src="vendor/maplibre-gl.js"></script>
 <script src="app.js?v=20260812k"></script>
+<script>
+(() => {
+  // City-switch filter: type instead of scrolling. Matches the English name,
+  // the local name and the Polish exonym, diacritic-insensitive.
+  const det = document.querySelector('details.city-switch');
+  const inp = det && det.querySelector('.city-filter');
+  if (!inp) return;
+  const ALT = {"krakow-bus-map": "Kraków Cracow Polska Poland Małopolska KMK MPK", "krakow-mld-bus-map": "Kraków MLD Małopolska Wieliczka Koleje Małopolskie Polska Poland", "poznan-bus-map": "Poznań Polska Poland ZTM", "gzm-bus-map": "Katowice GZM Śląsk Silesia Metropolia Tychy Gliwice Zabrze Sosnowiec Bytom Polska Poland", "rybnik-bus-map": "Rybnik Żory Jastrzębie-Zdrój Wodzisław Polska Poland", "trojmiasto-bus-map": "Trójmiasto Tricity Gdańsk Gdynia Sopot Wejherowo Rumia Polska Poland", "grodzisk-bus-map": "Grodzisk Mazowiecki WKD Milanówek Polanówek Polska Poland", "warsaw-bus-map": "Warszawa Warsaw Mazowsze ZTM WTP Metro SKM Polska Poland", "lodz-bus-map": "Łódź Lodz Polska Poland MPK ZDiT", "vienna-bus-map": "Wiedeń Wien Vienna Austria Österreich Wiener Linien", "budapest-bus-map": "Budapeszt Budapest Węgry Hungary Magyarország BKK", "paris-bus-map": "Paryż Paris Francja France IDFM RATP", "london-bus-map": "Londyn London United Kingdom Anglia England TfL", "copenhagen-bus-map": "Kopenhaga København Copenhagen Dania Denmark", "bucharest-bus-map": "Bukareszt București Bucharest Ilfov Rumunia Romania STB", "cluj-bus-map": "Kluż Cluj-Napoca Kolozsvár Rumunia Romania", "timisoara-bus-map": "Timișoara Temeszwar Temesvár Rumunia Romania", "oradea-bus-map": "Oradea Nagyvárad Rumunia Romania", "brasov-bus-map": "Braszów Brașov Rumunia Romania", "iasi-bus-map": "Jassy Iași Rumunia Romania", "constanta-bus-map": "Konstanca Constanța Rumunia Romania", "belgrade-bus-map": "Belgrad Beograd Belgrade Serbia Srbija Београд", "sofia-bus-map": "Sofia София Bułgaria Bulgaria", "istanbul-bus-map": "Stambuł İstanbul Istanbul Turcja Turkey Türkiye İETT", "athens-bus-map": "Ateny Athens Αθήνα Athina Grecja Greece OASA", "thessaloniki-bus-map": "Saloniki Thessaloniki Θεσσαλονίκη Grecja Greece", "naples-bus-map": "Neapol Napoli Naples Włochy Italy Italia ANM", "cairo-bus-map": "Kair Cairo القاهرة Egipt Egypt", "addis-bus-map": "Addis Abeba Ababa Etiopia Ethiopia Anbessa", "mexico-city-bus-map": "Meksyk Mexico City CDMX Ciudad de México Metrobús", "sao-paulo-bus-map": "São Paulo Brazylia Brazil SPTrans", "rio-bus-map": "Rio de Janeiro Brazylia Brazil BRT", "ba-bus-map": "Buenos Aires Argentyna Argentina colectivo subte", "berlin-bus-map": "Berlin Brandenburgia Brandenburg Poczdam Potsdam Niemcy Germany Deutschland BVG VBB S-Bahn U-Bahn", "randstad-bus-map": "Randstad Amsterdam Haarlem Lejda Leiden Haga Den Haag The Hague Rotterdam Holandia Netherlands Nederland Holland GVB HTM RET", "stockholm-bus-map": "Sztokholm Stockholm Szwecja Sweden Sverige SL tunnelbana pendeltåg Roslagsbanan", "goteborg-bus-map": "Göteborg Goteborg Gothenburg Gotembork Szwecja Sweden Sverige Västtrafik spårvagn", "olsztyn-bus-map": "Olsztyn Warmia Mazury Warmińsko-Mazurskie Polska Poland ZDZiT tramwaj", "aarhus-bus-map": "Aarhus Århus Dania Denmark Danmark Midttrafik Letbane Jutland Jylland", "rome-bus-map": "Rzym Roma Rome Włochy Italy Italia Atac metropolitana Lazio", "kyiv-bus-map": "Kijów Kyiv Київ Kiev Ukraina Ukraine Україна тролейбус трамвай", "lviv-bus-map": "Lwów Lviv Львів Lemberg Ukraina Ukraine Україна Львівелектротранс", "novi-sad-bus-map": "Nowy Sad Novi Sad Нови Сад Wojwodina Vojvodina Serbia Srbija JGSP", "nis-bus-map": "Nisz Niš Ниш Serbia Srbija JGSP Niš-Ekspres", "tirana-bus-map": "Tirana Tiranë Albania Shqipëri Shqipëria", "plovdiv-bus-map": "Płowdiw Plovdiv Пловдив Bułgaria Bulgaria", "varna-bus-map": "Warna Varna Варна Bułgaria Bulgaria тролейбус trolejbus", "burgas-bus-map": "Burgas Бургас Bułgaria Bulgaria тролейбус trolejbus Меден рудник Славейков", "ruse-bus-map": "Ruse Russe Русе Rusczuk Ruszczuk Bułgaria Bulgaria тролейбус trolejbus Дунав", "volos-bus-map": "Volos Wolos Βόλος Greece Grecja Ελλάδα Thessaly Θεσσαλία Pelion Πήλιο Nea Ionia Νέα Ιωνία", "larisa-bus-map": "Larisa Larissa Λάρισα Greece Grecja Ελλάδα Thessaly Θεσσαλία Giannouli Γιάννουλη Nikaia Νίκαια"};
+  const norm = (s) => (s || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '').replace(/ł/g, 'l').replace(/ø/g, 'o').replace(/đ/g, 'd').replace(/ß/g, 'ss').replace(/æ/g, 'ae').replace(/ı/g, 'i');
+  const rows = [...det.querySelectorAll('nav a, nav .current')];
+  for (const r of rows) {
+    const slug = r.href ? (new URL(r.href).pathname.split('/').filter(Boolean)[0] || '') : '';
+    r.dataset.q = norm(r.textContent + ' ' + (ALT[slug] || ''));
+  }
+  const apply = () => {
+    const nq = norm(inp.value.trim());
+    for (const r of rows) r.style.display = !nq || r.classList.contains('all') || r.dataset.q.includes(nq) ? '' : 'none';
+  };
+  inp.addEventListener('input', apply);
+  inp.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const f = rows.find((r) => r.href && !r.classList.contains('all') && r.style.display !== 'none');
+      if (f) location.href = f.href;
+    } else if (e.key === 'Escape') { inp.value = ''; apply(); e.stopPropagation(); }
+  });
+  det.addEventListener('toggle', () => {
+    if (det.open && matchMedia('(pointer: fine)').matches) setTimeout(() => inp.focus(), 0);
+  });
+})();
+</script>
 </body>
 </html>
