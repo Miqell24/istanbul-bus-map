@@ -224,9 +224,16 @@ async function init() {
       '\n', {},
       ['get', 'busLines'], { 'text-color': KMK }],
     ['format', ['get', 'lines'], {}]];
+  // Night lines print black (user rule, 8.09.2026): a row that carries one
+  // arrives from the pipeline (night.mjs) as coloured sections — l0/c0 … for
+  // the default rows, bl/bc for the bus-only view, tl/tc for the tram-only
+  // view — one section per run of same-coloured numbers, so the day numbers
+  // keep the mode colour and the night numbers are black.
+  const sectionRow = (pre) => { const r = ['format']; for (let i = 0; i < 24; i++) r.push(['coalesce', ['get', pre + 'l' + i], ''], { 'text-color': ['coalesce', ['get', pre + 'c' + i], KMK] }); return r; };
+  const numberFieldN = ['case', ['has', 'l0'], sectionRow(''), numberField];
   map.addSource('labels', { type: 'geojson', data: 'data/labels.geojson' });
   const numbersLayout = {
-    'text-field': numberField,
+    'text-field': numberFieldN,
     'text-font': [NARROW_BOLD],
     // a quarter smaller than the stop names' scale: the rows are the most
     // repeated element on the map, and at the old size they crowded whole
@@ -708,6 +715,8 @@ async function init() {
     ['format', ['get', 'busLines'], { 'text-color': KMK }],
     ['format', ['get', 'lines'], {}]];
   const tramOnlyNumbers = ['format', ['get', 'lines'], {}];
+  const busOnlyNumbersN = ['case', ['has', 'bl0'], sectionRow('b'), busOnlyNumbers];
+  const tramOnlyNumbersN = ['case', ['has', 'tl0'], sectionRow('t'), tramOnlyNumbers];
   function applyFilters() {
     const modes = [state.bus ? 'bus' : null, state.tram ? 'tram' : null].filter(Boolean);
     const modeC = ['in', ['get', 'mode'], ['literal', modes]];
@@ -799,10 +808,10 @@ async function init() {
         ['all', ['==', ['get', 'mode'], 'bus'], busLblC],
         ['has', 'busLines'],
         state.metro ? ['all', ['==', ['get', 'mode'], 'tram'], ['==', ['get', 'metro'], 1]] : false], selC];
-      numField = busOnlyNumbers;
+      numField = busOnlyNumbersN;
     } else {
       numC = ['all', lblModeC, selC];
-      numField = state.tram && !(B || M) ? tramOnlyNumbers : numberField;
+      numField = state.tram && !(B || M) ? tramOnlyNumbersN : numberFieldN;
     }
     // with only one bus network on, mixed rows shrink to their relevant half
     if (B && !M) numField = ['case', ['all', ['==', ['get', 'mode'], 'bus'], ['has', 'nmLines']], ['format', ['get', 'nmLines'], {}], numField];

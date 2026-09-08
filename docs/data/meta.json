@@ -4749,55 +4749,6 @@
       ]
     },
     {
-      "line": "15N",
-      "mode": "bus",
-      "color": "#0059a9",
-      "dirs": [
-        {
-          "dir": "0",
-          "headsign": "ÜSKÜDAR CAMİİ ÖNÜ",
-          "variants": 1,
-          "tripCount": 48,
-          "stops": 57,
-          "lengthKm": 27.59,
-          "stats": {
-            "observations": 57,
-            "matched": 57,
-            "noCandidates": 0,
-            "viterbiBreaks": 0,
-            "bridged": 0,
-            "rawStretchCount": 0,
-            "rawMeters": 0,
-            "meanError": 7.117738067076097,
-            "roundaboutSegs": 8,
-            "extStart": 0,
-            "extEnd": 0
-          }
-        },
-        {
-          "dir": "1",
-          "headsign": "ARKBOYU",
-          "variants": 1,
-          "tripCount": 45,
-          "stops": 30,
-          "lengthKm": 13.73,
-          "stats": {
-            "observations": 30,
-            "matched": 30,
-            "noCandidates": 0,
-            "viterbiBreaks": 0,
-            "bridged": 0,
-            "rawStretchCount": 0,
-            "rawMeters": 0,
-            "meanError": 7.0559552927328095,
-            "roundaboutSegs": 1,
-            "extStart": 0,
-            "extEnd": 0
-          }
-        }
-      ]
-    },
-    {
       "line": "15P",
       "mode": "bus",
       "color": "#0059a9",
@@ -11980,34 +11931,6 @@
       ]
     },
     {
-      "line": "41N",
-      "mode": "bus",
-      "color": "#0059a9",
-      "dirs": [
-        {
-          "dir": "0",
-          "headsign": "NİŞANTAŞI ÜNİVERSİTESİ - İTÜ REKTÖRLÜĞÜ (Ring)",
-          "variants": 1,
-          "tripCount": 88,
-          "stops": 14,
-          "lengthKm": 6.62,
-          "stats": {
-            "observations": 14,
-            "matched": 14,
-            "noCandidates": 0,
-            "viterbiBreaks": 0,
-            "bridged": 0,
-            "rawStretchCount": 0,
-            "rawMeters": 0,
-            "meanError": 9.849336005145801,
-            "roundaboutSegs": 9,
-            "extStart": 0,
-            "extEnd": 0
-          }
-        }
-      ]
-    },
-    {
       "line": "41SF",
       "mode": "bus",
       "color": "#0059a9",
@@ -13002,55 +12925,6 @@
       ]
     },
     {
-      "line": "48N",
-      "mode": "bus",
-      "color": "#0059a9",
-      "dirs": [
-        {
-          "dir": "0",
-          "headsign": "GÜZELTEPE 2 - TAKSİM (Ring)",
-          "variants": 1,
-          "tripCount": 174,
-          "stops": 65,
-          "lengthKm": 23.89,
-          "stats": {
-            "observations": 65,
-            "matched": 65,
-            "noCandidates": 0,
-            "viterbiBreaks": 0,
-            "bridged": 0,
-            "rawStretchCount": 0,
-            "rawMeters": 0,
-            "meanError": 8.252575557523695,
-            "roundaboutSegs": 16,
-            "extStart": 0,
-            "extEnd": 0
-          }
-        },
-        {
-          "dir": "1",
-          "headsign": "EMNİYETTEPE",
-          "variants": 1,
-          "tripCount": 17,
-          "stops": 33,
-          "lengthKm": 12.26,
-          "stats": {
-            "observations": 33,
-            "matched": 33,
-            "noCandidates": 0,
-            "viterbiBreaks": 0,
-            "bridged": 0,
-            "rawStretchCount": 0,
-            "rawMeters": 0,
-            "meanError": 7.763122016794091,
-            "roundaboutSegs": 11,
-            "extStart": 0,
-            "extEnd": 0
-          }
-        }
-      ]
-    },
-    {
       "line": "48P",
       "mode": "bus",
       "color": "#0059a9",
@@ -13765,55 +13639,6 @@
             "rawMeters": 0,
             "meanError": 8.026437661339925,
             "roundaboutSegs": 0,
-            "extStart": 0,
-            "extEnd": 0
-          }
-        }
-      ]
-    },
-    {
-      "line": "50N",
-      "mode": "bus",
-      "color": "#0059a9",
-      "dirs": [
-        {
-          "dir": "0",
-          "headsign": "ALİBEYKÖY METRO - HARBİYE (Ring)",
-          "variants": 1,
-          "tripCount": 273,
-          "stops": 61,
-          "lengthKm": 25.03,
-          "stats": {
-            "observations": 61,
-            "matched": 61,
-            "noCandidates": 0,
-            "viterbiBreaks": 0,
-            "bridged": 0,
-            "rawStretchCount": 0,
-            "rawMeters": 0,
-            "meanError": 9.446542200163405,
-            "roundaboutSegs": 8,
-            "extStart": 0,
-            "extEnd": 0
-          }
-        },
-        {
-          "dir": "1",
-          "headsign": "ALİBEYKÖY METRO",
-          "variants": 1,
-          "tripCount": 34,
-          "stops": 31,
-          "lengthKm": 12.35,
-          "stats": {
-            "observations": 31,
-            "matched": 31,
-            "noCandidates": 0,
-            "viterbiBreaks": 0,
-            "bridged": 0,
-            "rawStretchCount": 0,
-            "rawMeters": 0,
-            "meanError": 8.784828425567465,
-            "roundaboutSegs": 8,
             "extStart": 0,
             "extEnd": 0
           }
@@ -14892,55 +14717,6 @@
       ]
     },
     {
-      "line": "58N",
-      "mode": "bus",
-      "color": "#0059a9",
-      "dirs": [
-        {
-          "dir": "0",
-          "headsign": "FATİH SULTAN MEHMET - KABATAŞ (Ring)",
-          "variants": 1,
-          "tripCount": 187,
-          "stops": 42,
-          "lengthKm": 20.74,
-          "stats": {
-            "observations": 42,
-            "matched": 42,
-            "noCandidates": 0,
-            "viterbiBreaks": 0,
-            "bridged": 0,
-            "rawStretchCount": 0,
-            "rawMeters": 0,
-            "meanError": 8.2741129194777,
-            "roundaboutSegs": 21,
-            "extStart": 0,
-            "extEnd": 0
-          }
-        },
-        {
-          "dir": "1",
-          "headsign": "FATİH SULTAN MEHMET",
-          "variants": 1,
-          "tripCount": 18,
-          "stops": 20,
-          "lengthKm": 9.8,
-          "stats": {
-            "observations": 20,
-            "matched": 20,
-            "noCandidates": 0,
-            "viterbiBreaks": 0,
-            "bridged": 0,
-            "rawStretchCount": 0,
-            "rawMeters": 0,
-            "meanError": 8.850287573743355,
-            "roundaboutSegs": 3,
-            "extStart": 0,
-            "extEnd": 0
-          }
-        }
-      ]
-    },
-    {
       "line": "58S",
       "mode": "bus",
       "color": "#0059a9",
@@ -15207,55 +14983,6 @@
             "rawMeters": 0,
             "meanError": 6.866742621053318,
             "roundaboutSegs": 6,
-            "extStart": 0,
-            "extEnd": 0
-          }
-        }
-      ]
-    },
-    {
-      "line": "59N",
-      "mode": "bus",
-      "color": "#0059a9",
-      "dirs": [
-        {
-          "dir": "0",
-          "headsign": "FATİH SULTAN MEHMET - ŞİŞLİ (Ring)",
-          "variants": 1,
-          "tripCount": 209,
-          "stops": 32,
-          "lengthKm": 16.25,
-          "stats": {
-            "observations": 32,
-            "matched": 32,
-            "noCandidates": 0,
-            "viterbiBreaks": 0,
-            "bridged": 0,
-            "rawStretchCount": 0,
-            "rawMeters": 0,
-            "meanError": 7.683105094346448,
-            "roundaboutSegs": 19,
-            "extStart": 0,
-            "extEnd": 0
-          }
-        },
-        {
-          "dir": "1",
-          "headsign": "FATİH SULTAN MEHMET",
-          "variants": 1,
-          "tripCount": 22,
-          "stops": 15,
-          "lengthKm": 7.29,
-          "stats": {
-            "observations": 15,
-            "matched": 15,
-            "noCandidates": 0,
-            "viterbiBreaks": 0,
-            "bridged": 0,
-            "rawStretchCount": 0,
-            "rawMeters": 0,
-            "meanError": 8.042251683267562,
-            "roundaboutSegs": 1,
             "extStart": 0,
             "extEnd": 0
           }
@@ -22767,55 +22494,6 @@
       ]
     },
     {
-      "line": "132N",
-      "mode": "bus",
-      "color": "#0059a9",
-      "dirs": [
-        {
-          "dir": "0",
-          "headsign": "KARTAL",
-          "variants": 1,
-          "tripCount": 6,
-          "stops": 69,
-          "lengthKm": 37.82,
-          "stats": {
-            "observations": 69,
-            "matched": 69,
-            "noCandidates": 0,
-            "viterbiBreaks": 0,
-            "bridged": 0,
-            "rawStretchCount": 0,
-            "rawMeters": 0,
-            "meanError": 7.304698428938148,
-            "roundaboutSegs": 53,
-            "extStart": 0,
-            "extEnd": 0
-          }
-        },
-        {
-          "dir": "1",
-          "headsign": "ÖZYEĞİN ÜNİVERSİTESİ ALT KAPI",
-          "variants": 1,
-          "tripCount": 5,
-          "stops": 64,
-          "lengthKm": 32.77,
-          "stats": {
-            "observations": 64,
-            "matched": 64,
-            "noCandidates": 0,
-            "viterbiBreaks": 0,
-            "bridged": 0,
-            "rawStretchCount": 0,
-            "rawMeters": 0,
-            "meanError": 6.447455071263879,
-            "roundaboutSegs": 39,
-            "extStart": 0,
-            "extEnd": 0
-          }
-        }
-      ]
-    },
-    {
       "line": "132P",
       "mode": "bus",
       "color": "#0059a9",
@@ -23691,55 +23369,6 @@
             "rawMeters": 0,
             "meanError": 6.971888205350231,
             "roundaboutSegs": 64,
-            "extStart": 0,
-            "extEnd": 0
-          }
-        }
-      ]
-    },
-    {
-      "line": "133N",
-      "mode": "bus",
-      "color": "#0059a9",
-      "dirs": [
-        {
-          "dir": "0",
-          "headsign": "KARTAL",
-          "variants": 1,
-          "tripCount": 22,
-          "stops": 44,
-          "lengthKm": 26.43,
-          "stats": {
-            "observations": 44,
-            "matched": 44,
-            "noCandidates": 0,
-            "viterbiBreaks": 0,
-            "bridged": 0,
-            "rawStretchCount": 0,
-            "rawMeters": 0,
-            "meanError": 7.240263402346387,
-            "roundaboutSegs": 26,
-            "extStart": 0,
-            "extEnd": 0
-          }
-        },
-        {
-          "dir": "1",
-          "headsign": "MESLEK YÜKSEK OKULU",
-          "variants": 1,
-          "tripCount": 23,
-          "stops": 42,
-          "lengthKm": 20.93,
-          "stats": {
-            "observations": 42,
-            "matched": 42,
-            "noCandidates": 0,
-            "viterbiBreaks": 0,
-            "bridged": 0,
-            "rawStretchCount": 0,
-            "rawMeters": 0,
-            "meanError": 5.7647598841286225,
-            "roundaboutSegs": 55,
             "extStart": 0,
             "extEnd": 0
           }
@@ -37682,6 +37311,385 @@
           }
         }
       ]
+    },
+    {
+      "line": "15N",
+      "mode": "bus",
+      "color": "#000000",
+      "dirs": [
+        {
+          "dir": "0",
+          "headsign": "ÜSKÜDAR CAMİİ ÖNÜ",
+          "variants": 1,
+          "tripCount": 48,
+          "stops": 57,
+          "lengthKm": 27.59,
+          "stats": {
+            "observations": 57,
+            "matched": 57,
+            "noCandidates": 0,
+            "viterbiBreaks": 0,
+            "bridged": 0,
+            "rawStretchCount": 0,
+            "rawMeters": 0,
+            "meanError": 7.117738067076097,
+            "roundaboutSegs": 8,
+            "extStart": 0,
+            "extEnd": 0
+          }
+        },
+        {
+          "dir": "1",
+          "headsign": "ARKBOYU",
+          "variants": 1,
+          "tripCount": 45,
+          "stops": 30,
+          "lengthKm": 13.73,
+          "stats": {
+            "observations": 30,
+            "matched": 30,
+            "noCandidates": 0,
+            "viterbiBreaks": 0,
+            "bridged": 0,
+            "rawStretchCount": 0,
+            "rawMeters": 0,
+            "meanError": 7.0559552927328095,
+            "roundaboutSegs": 1,
+            "extStart": 0,
+            "extEnd": 0
+          }
+        }
+      ],
+      "rank": 2
+    },
+    {
+      "line": "41N",
+      "mode": "bus",
+      "color": "#000000",
+      "dirs": [
+        {
+          "dir": "0",
+          "headsign": "NİŞANTAŞI ÜNİVERSİTESİ - İTÜ REKTÖRLÜĞÜ (Ring)",
+          "variants": 1,
+          "tripCount": 88,
+          "stops": 14,
+          "lengthKm": 6.62,
+          "stats": {
+            "observations": 14,
+            "matched": 14,
+            "noCandidates": 0,
+            "viterbiBreaks": 0,
+            "bridged": 0,
+            "rawStretchCount": 0,
+            "rawMeters": 0,
+            "meanError": 9.849336005145801,
+            "roundaboutSegs": 9,
+            "extStart": 0,
+            "extEnd": 0
+          }
+        }
+      ],
+      "rank": 2
+    },
+    {
+      "line": "48N",
+      "mode": "bus",
+      "color": "#000000",
+      "dirs": [
+        {
+          "dir": "0",
+          "headsign": "GÜZELTEPE 2 - TAKSİM (Ring)",
+          "variants": 1,
+          "tripCount": 174,
+          "stops": 65,
+          "lengthKm": 23.89,
+          "stats": {
+            "observations": 65,
+            "matched": 65,
+            "noCandidates": 0,
+            "viterbiBreaks": 0,
+            "bridged": 0,
+            "rawStretchCount": 0,
+            "rawMeters": 0,
+            "meanError": 8.252575557523695,
+            "roundaboutSegs": 16,
+            "extStart": 0,
+            "extEnd": 0
+          }
+        },
+        {
+          "dir": "1",
+          "headsign": "EMNİYETTEPE",
+          "variants": 1,
+          "tripCount": 17,
+          "stops": 33,
+          "lengthKm": 12.26,
+          "stats": {
+            "observations": 33,
+            "matched": 33,
+            "noCandidates": 0,
+            "viterbiBreaks": 0,
+            "bridged": 0,
+            "rawStretchCount": 0,
+            "rawMeters": 0,
+            "meanError": 7.763122016794091,
+            "roundaboutSegs": 11,
+            "extStart": 0,
+            "extEnd": 0
+          }
+        }
+      ],
+      "rank": 2
+    },
+    {
+      "line": "50N",
+      "mode": "bus",
+      "color": "#000000",
+      "dirs": [
+        {
+          "dir": "0",
+          "headsign": "ALİBEYKÖY METRO - HARBİYE (Ring)",
+          "variants": 1,
+          "tripCount": 273,
+          "stops": 61,
+          "lengthKm": 25.03,
+          "stats": {
+            "observations": 61,
+            "matched": 61,
+            "noCandidates": 0,
+            "viterbiBreaks": 0,
+            "bridged": 0,
+            "rawStretchCount": 0,
+            "rawMeters": 0,
+            "meanError": 9.446542200163405,
+            "roundaboutSegs": 8,
+            "extStart": 0,
+            "extEnd": 0
+          }
+        },
+        {
+          "dir": "1",
+          "headsign": "ALİBEYKÖY METRO",
+          "variants": 1,
+          "tripCount": 34,
+          "stops": 31,
+          "lengthKm": 12.35,
+          "stats": {
+            "observations": 31,
+            "matched": 31,
+            "noCandidates": 0,
+            "viterbiBreaks": 0,
+            "bridged": 0,
+            "rawStretchCount": 0,
+            "rawMeters": 0,
+            "meanError": 8.784828425567465,
+            "roundaboutSegs": 8,
+            "extStart": 0,
+            "extEnd": 0
+          }
+        }
+      ],
+      "rank": 2
+    },
+    {
+      "line": "58N",
+      "mode": "bus",
+      "color": "#000000",
+      "dirs": [
+        {
+          "dir": "0",
+          "headsign": "FATİH SULTAN MEHMET - KABATAŞ (Ring)",
+          "variants": 1,
+          "tripCount": 187,
+          "stops": 42,
+          "lengthKm": 20.74,
+          "stats": {
+            "observations": 42,
+            "matched": 42,
+            "noCandidates": 0,
+            "viterbiBreaks": 0,
+            "bridged": 0,
+            "rawStretchCount": 0,
+            "rawMeters": 0,
+            "meanError": 8.2741129194777,
+            "roundaboutSegs": 21,
+            "extStart": 0,
+            "extEnd": 0
+          }
+        },
+        {
+          "dir": "1",
+          "headsign": "FATİH SULTAN MEHMET",
+          "variants": 1,
+          "tripCount": 18,
+          "stops": 20,
+          "lengthKm": 9.8,
+          "stats": {
+            "observations": 20,
+            "matched": 20,
+            "noCandidates": 0,
+            "viterbiBreaks": 0,
+            "bridged": 0,
+            "rawStretchCount": 0,
+            "rawMeters": 0,
+            "meanError": 8.850287573743355,
+            "roundaboutSegs": 3,
+            "extStart": 0,
+            "extEnd": 0
+          }
+        }
+      ],
+      "rank": 2
+    },
+    {
+      "line": "59N",
+      "mode": "bus",
+      "color": "#000000",
+      "dirs": [
+        {
+          "dir": "0",
+          "headsign": "FATİH SULTAN MEHMET - ŞİŞLİ (Ring)",
+          "variants": 1,
+          "tripCount": 209,
+          "stops": 32,
+          "lengthKm": 16.25,
+          "stats": {
+            "observations": 32,
+            "matched": 32,
+            "noCandidates": 0,
+            "viterbiBreaks": 0,
+            "bridged": 0,
+            "rawStretchCount": 0,
+            "rawMeters": 0,
+            "meanError": 7.683105094346448,
+            "roundaboutSegs": 19,
+            "extStart": 0,
+            "extEnd": 0
+          }
+        },
+        {
+          "dir": "1",
+          "headsign": "FATİH SULTAN MEHMET",
+          "variants": 1,
+          "tripCount": 22,
+          "stops": 15,
+          "lengthKm": 7.29,
+          "stats": {
+            "observations": 15,
+            "matched": 15,
+            "noCandidates": 0,
+            "viterbiBreaks": 0,
+            "bridged": 0,
+            "rawStretchCount": 0,
+            "rawMeters": 0,
+            "meanError": 8.042251683267562,
+            "roundaboutSegs": 1,
+            "extStart": 0,
+            "extEnd": 0
+          }
+        }
+      ],
+      "rank": 2
+    },
+    {
+      "line": "132N",
+      "mode": "bus",
+      "color": "#000000",
+      "dirs": [
+        {
+          "dir": "0",
+          "headsign": "KARTAL",
+          "variants": 1,
+          "tripCount": 6,
+          "stops": 69,
+          "lengthKm": 37.82,
+          "stats": {
+            "observations": 69,
+            "matched": 69,
+            "noCandidates": 0,
+            "viterbiBreaks": 0,
+            "bridged": 0,
+            "rawStretchCount": 0,
+            "rawMeters": 0,
+            "meanError": 7.304698428938148,
+            "roundaboutSegs": 53,
+            "extStart": 0,
+            "extEnd": 0
+          }
+        },
+        {
+          "dir": "1",
+          "headsign": "ÖZYEĞİN ÜNİVERSİTESİ ALT KAPI",
+          "variants": 1,
+          "tripCount": 5,
+          "stops": 64,
+          "lengthKm": 32.77,
+          "stats": {
+            "observations": 64,
+            "matched": 64,
+            "noCandidates": 0,
+            "viterbiBreaks": 0,
+            "bridged": 0,
+            "rawStretchCount": 0,
+            "rawMeters": 0,
+            "meanError": 6.447455071263879,
+            "roundaboutSegs": 39,
+            "extStart": 0,
+            "extEnd": 0
+          }
+        }
+      ],
+      "rank": 2
+    },
+    {
+      "line": "133N",
+      "mode": "bus",
+      "color": "#000000",
+      "dirs": [
+        {
+          "dir": "0",
+          "headsign": "KARTAL",
+          "variants": 1,
+          "tripCount": 22,
+          "stops": 44,
+          "lengthKm": 26.43,
+          "stats": {
+            "observations": 44,
+            "matched": 44,
+            "noCandidates": 0,
+            "viterbiBreaks": 0,
+            "bridged": 0,
+            "rawStretchCount": 0,
+            "rawMeters": 0,
+            "meanError": 7.240263402346387,
+            "roundaboutSegs": 26,
+            "extStart": 0,
+            "extEnd": 0
+          }
+        },
+        {
+          "dir": "1",
+          "headsign": "MESLEK YÜKSEK OKULU",
+          "variants": 1,
+          "tripCount": 23,
+          "stops": 42,
+          "lengthKm": 20.93,
+          "stats": {
+            "observations": 42,
+            "matched": 42,
+            "noCandidates": 0,
+            "viterbiBreaks": 0,
+            "bridged": 0,
+            "rawStretchCount": 0,
+            "rawMeters": 0,
+            "meanError": 5.7647598841286225,
+            "roundaboutSegs": 55,
+            "extStart": 0,
+            "extEnd": 0
+          }
+        }
+      ],
+      "rank": 2
     }
   ]
 }
