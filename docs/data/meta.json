@@ -10040,7 +10040,7 @@
         },
         {
           "dir": "1",
-          "headsign": "",
+          "headsign": "B.Sondurak",
           "variants": 1,
           "tripCount": 2208,
           "stops": 44,
@@ -11496,7 +11496,7 @@
       "dirs": [
         {
           "dir": "0",
-          "headsign": "",
+          "headsign": "Zübeyde Hanım Mahallesi",
           "variants": 1,
           "tripCount": 44,
           "stops": 74,
@@ -28345,7 +28345,7 @@
       "dirs": [
         {
           "dir": "0",
-          "headsign": "",
+          "headsign": "Manavgat",
           "variants": 1,
           "tripCount": 9,
           "stops": 27,
@@ -37158,104 +37158,6 @@
             "rawStretchCount": 0,
             "rawMeters": 0,
             "meanError": 17.2818711432659,
-            "roundaboutSegs": 0,
-            "extStart": 0,
-            "extEnd": 0
-          }
-        }
-      ]
-    },
-    {
-      "line": "Marmaray1",
-      "mode": "tram",
-      "color": "#00539F",
-      "dirs": [
-        {
-          "dir": "0",
-          "headsign": "ZEYTİNBURNU",
-          "variants": 1,
-          "tripCount": 1,
-          "stops": 7,
-          "lengthKm": 15.77,
-          "stats": {
-            "observations": 653,
-            "matched": 653,
-            "noCandidates": 0,
-            "viterbiBreaks": 0,
-            "bridged": 0,
-            "rawStretchCount": 0,
-            "rawMeters": 0,
-            "meanError": 13.024365904590063,
-            "roundaboutSegs": 0,
-            "extStart": 0,
-            "extEnd": 0
-          }
-        },
-        {
-          "dir": "1",
-          "headsign": "SÖĞÜTLÜÇEŞME",
-          "variants": 1,
-          "tripCount": 1,
-          "stops": 7,
-          "lengthKm": 15.77,
-          "stats": {
-            "observations": 652,
-            "matched": 652,
-            "noCandidates": 0,
-            "viterbiBreaks": 0,
-            "bridged": 0,
-            "rawStretchCount": 0,
-            "rawMeters": 0,
-            "meanError": 13.026046386594395,
-            "roundaboutSegs": 0,
-            "extStart": 0,
-            "extEnd": 0
-          }
-        }
-      ]
-    },
-    {
-      "line": "Marmaray2",
-      "mode": "tram",
-      "color": "#00539F",
-      "dirs": [
-        {
-          "dir": "0",
-          "headsign": "BAHÇEŞEHİR",
-          "variants": 1,
-          "tripCount": 2,
-          "stops": 5,
-          "lengthKm": 13.55,
-          "stats": {
-            "observations": 661,
-            "matched": 661,
-            "noCandidates": 0,
-            "viterbiBreaks": 0,
-            "bridged": 0,
-            "rawStretchCount": 0,
-            "rawMeters": 0,
-            "meanError": 2.7526288051580527,
-            "roundaboutSegs": 0,
-            "extStart": 0,
-            "extEnd": 0
-          }
-        },
-        {
-          "dir": "1",
-          "headsign": "HALKALI",
-          "variants": 1,
-          "tripCount": 2,
-          "stops": 5,
-          "lengthKm": 13.55,
-          "stats": {
-            "observations": 661,
-            "matched": 661,
-            "noCandidates": 0,
-            "viterbiBreaks": 0,
-            "bridged": 0,
-            "rawStretchCount": 0,
-            "rawMeters": 0,
-            "meanError": 2.7558852470029525,
             "roundaboutSegs": 0,
             "extStart": 0,
             "extEnd": 0
