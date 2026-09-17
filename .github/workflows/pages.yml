@@ -1,0 +1,33 @@
+# Publishes the finished map in docs/ to GitHub Pages on every push to main.
+# Nothing is built here: the map is built locally and pushed ready to serve.
+name: Publish map
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    # only in the AGCGHub organization (the old personal copies publish from the branch)
+    if: github.repository_owner == 'AGCGHub'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - id: deployment
+        uses: actions/deploy-pages@v4
