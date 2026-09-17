@@ -7,7 +7,7 @@ street and track geometry.
 
 ## Live
 
-**https://miqell24.github.io/istanbul-bus-map/** — GitHub Pages from `main:/docs`.
+**https://agcghub.github.io/istanbul-bus-map/** — GitHub Pages from `main:/docs`.
 
 Data comes from **two** bundles on the İBB open data portal
 ([data.ibb.gov.tr](https://data.ibb.gov.tr), İBB Open Data Licence):

@@ -363,7 +363,7 @@
     const charset = { reg: new Set(fReg.getCharacterSet()), bold: new Set(fBold.getCharacterSet()) };
     doc.setTitle(document.title);
     doc.setProducer('transit-maps pdf-export ' + VERSION);
-    doc.setCreator('miqell24.github.io/transit-maps');
+    doc.setCreator('agcghub.github.io/transit-maps');
     const ctx = doc.context;
 
     // Sheet geometry. The current view is the viewport at the screen's zoom.
