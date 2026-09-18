@@ -1,4 +1,4 @@
-# Istanbul Public Transport — interactive map
+# İstanbul Public Transport — interactive map
 
 Interactive, poster-grade map of the **Istanbul** network: the İETT bus system
 (including the Metrobüs BRT), the Metro İstanbul rapid-transit and tram lines in
